@@ -1,39 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# lms-frontend
 
-## Getting Started
+Frontend för gruppens **Learning Management System** (kursen *Molntjänster och distribuerade system*, EC Utbildning). Gemensamt repo — hela gruppen jobbar här. Backend-tjänsterna ligger i egna repos i samma org.
 
-First, run the development server:
+## Stack
+
+- **Next.js** (App Router) + **TypeScript**
+- **Tailwind CSS** + **shadcn/ui** (komponenter kopieras in i `components/ui/`)
+- **lucide-react** (ikoner)
+- **TanStack Query** (datahämtning mot backend-API:erna)
+- **React Hook Form + Zod** (formulär & validering)
+- Deploy: **Vercel** (auto-deploy vid push till `main`)
+
+## Kör lokalt
+
+Kräver Node 20 LTS eller senare.
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Öppna http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Bygg
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build   # produktionsbygge
+npm run start   # kör produktionsbygget lokalt
+npm run lint    # ESLint
+```
 
-## Learn More
+## Mappstruktur
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/            # sidor och layouts (App Router)
+  (auth)/       # ej-inloggade flöden (login, register, verify)
+  (app)/        # inloggade flöden (dashboard, courses, …)
+components/
+  ui/           # shadcn-primitiver
+  features/     # egna sammansatta komponenter
+lib/            # api-klient, hjälpfunktioner
+hooks/          # custom React-hooks
+types/          # delade TypeScript-typer
+middleware.ts   # route-skydd (inloggning + roller)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Miljövariabler
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Backend-URL:er sätts som miljövariabler (lokalt i `.env.local`, i produktion i Vercel-dashboarden). `.env.local` är gitignorerad — committa aldrig riktiga värden.
 
-## Deploy on Vercel
+```
+NEXT_PUBLIC_API_URL=https://<din-backend>.azurewebsites.net
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Kopplat till Vercel. Push till `main` → produktionsdeploy. Push till andra brancher / PR:ar → preview-deploy med egen URL.
 
+## Bidra
 
-Test1
+Jobba aldrig direkt på `main` — den är skyddad. Skapa en branch, öppna en pull request. Se `_Git-flöde.md` i uppgiftsmappen för det fullständiga flödet och namngivningskonventioner.
