@@ -60,3 +60,5 @@ Kopplat till Vercel. Push till `main` → produktionsdeploy. Push till andra bra
 ## Bidra
 
 Jobba aldrig direkt på `main` — den är skyddad. Skapa en branch, öppna en pull request. Se `_Git-flöde.md` i uppgiftsmappen för det fullständiga flödet och namngivningskonventioner.
+
+Test merge
