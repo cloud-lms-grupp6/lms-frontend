@@ -63,7 +63,7 @@
   --primary-foreground: #ffffff;
   --secondary: #e3e5e8;
   --secondary-foreground: #2c3545;
-  --muted: #e3e5e8;
+  --muted: #eaebed;
   --muted-foreground: #aaaaaa;
   --accent: #fde6e1;
   --accent-foreground: #2c3545;
@@ -81,14 +81,14 @@
   --radius: 0.6875rem;
   --radius-button: 0.6875rem;
   --radius-card: 1.875rem;
-  --sidebar: #2c3545;
-  --sidebar-foreground: #ffffff;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #2c3545;
   --sidebar-primary: #ED5735;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-accent: #fde6e1;
+  --sidebar-accent-foreground: #ED5735;
+  --sidebar-border: #e3e5e8;
+  --sidebar-ring: #ED5735;
 }
 
 .dark {
