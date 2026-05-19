@@ -50,16 +50,7 @@ const menuItems: NavItem[] = [
 const generalItems: NavItem[] = [
   { title: "Profile", href: "/profile", icon: User },
   { title: "Team", href: "/team", icon: Users },
-  {
-    title: "Settings",
-    href: "/settings",
-    icon: Settings,
-    children: [
-      { title: "Team", href: "/settings/team", icon: Users },
-      { title: "Password", href: "/settings/password", icon: Lock },
-      { title: "Notification", href: "/settings/notification", icon: Bell },
-    ],
-  },
+  { title: "Settings", href: "/settings", icon: Settings },
   { title: "Help Center", href: "/help", icon: HelpCircle },
 ];
 
