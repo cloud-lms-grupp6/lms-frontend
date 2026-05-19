@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/lib/auth/hooks";
 import { signInPasswordSchema, type SignInPasswordInput } from "@/lib/schemas/auth";
 import { Suspense } from "react";
 
@@ -16,6 +17,7 @@ function PasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
+  const { signIn } = useAuth();
 
   const {
     register,
@@ -26,10 +28,9 @@ function PasswordForm() {
     mode: "onTouched",
   });
 
-  function onSubmit(values: SignInPasswordInput) {
-    console.log("sign-in password:", values);
-    // TODO: In KAN-83, we will call the mock auth store here
-    // router.push("/");
+  async function onSubmit(values: SignInPasswordInput) {
+    await signIn(email, values.password);
+    router.push("/");
   }
 
   return (
