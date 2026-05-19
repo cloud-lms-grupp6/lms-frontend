@@ -1,9 +1,5 @@
-  import { Button } from "@/components/ui/button";
+import { redirect } from "next/navigation";
 
-  export default function Home() {
-    return (
-      <main className="flex flex-1 items-center justify-center">
-        <Button>Test orange</Button>
-      </main>
-    );
-  }
+export default function RootPage() {
+  redirect("/dashboard");
+}
