@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import { MobileMenuButton } from "@/components/dashboard/mobile-menu-button";
+import { TopBar } from "@/components/dashboard/top-bar";
 import {
   SidebarInset,
   SidebarProvider,
@@ -15,10 +16,10 @@ export default function DashboardLayout({
       <SidebarProvider className="h-full min-h-0 [--sidebar-width-icon:4.5rem]!">
         <AppSidebar />
         <SidebarInset className="h-full min-h-0 bg-transparent gap-3 overflow-hidden">
-          <header className="flex h-14 shrink-0 items-center gap-3 rounded-[18px] bg-card px-4 shadow-sm sm:ml-3">
-            {/* topbar inehåll i nästa steg */}
+          <header className="flex h-14 shrink-0 items-center gap-3 rounded-card bg-card px-4 shadow-sm sm:ml-3">
+            <TopBar />
           </header>
-          <main className="min-h-0 flex-1 overflow-auto rounded-[18px] bg-card p-6 shadow-sm sm:ml-3">
+          <main className="min-h-0 flex-1 overflow-auto sm:ml-3">
             {children}
           </main>
         </SidebarInset>

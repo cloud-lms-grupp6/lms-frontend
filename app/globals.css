@@ -43,6 +43,8 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-completed: var(--completed);
+  --color-completed-bg: var(--completed-bg);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -80,7 +82,7 @@
   --chart-5: oklch(0.269 0 0);
   --radius: 0.6875rem;
   --radius-button: 0.6875rem;
-  --radius-card: 1.875rem;
+  --radius-card: 1.125rem;
   --sidebar: #ffffff;
   --sidebar-foreground: #2c3545;
   --sidebar-primary: #ED5735;
@@ -89,6 +91,8 @@
   --sidebar-accent-foreground: #ED5735;
   --sidebar-border: #e3e5e8;
   --sidebar-ring: #ED5735;
+  --completed: #03B700;
+  --completed-bg: #dff2e1;
 }
 
 .dark {
@@ -123,6 +127,8 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --completed: #34d399;
+  --completed-bg: #064e3b;
 }
 
 @layer base {

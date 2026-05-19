@@ -158,7 +158,7 @@ export function AppSidebar() {
       collapsible="icon"
       className="h-full data-[side=left]:border-r-0"
     >
-      <SidebarHeader className="h-14 shrink-0 flex-row items-center justify-between rounded-[18px] bg-card px-4 py-0 shadow-sm group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:gap-1">
+      <SidebarHeader className="h-14 shrink-0 flex-row items-center justify-between rounded-card bg-card px-4 py-0 shadow-sm group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:gap-1">
         <Link
           href="/dashboard"
           className="flex items-center group-data-[collapsible=icon]:hidden"
@@ -188,7 +188,7 @@ export function AppSidebar() {
         <SidebarTrigger className="text-muted-foreground" />
       </SidebarHeader>
 
-      <div className="mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[18px] bg-card shadow-sm">
+      <div className="mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-card bg-card shadow-sm">
         <SidebarContent className="bg-transparent">
           <NavGroup label="MENU" items={menuItems} />
           <NavGroup label="GENERAL" items={generalItems} />
