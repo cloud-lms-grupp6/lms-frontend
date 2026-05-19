@@ -33,6 +33,10 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         // ska koppla till backend Auth-Api när den finns
         await new Promise((resolve) => setTimeout(resolve, 500));
 
+        const fakeToken = "mock-jwt-" + Date.now();
+        // Sätt en cookie så att middleware.ts kan läsa den
+        document.cookie = `auth-token=${fakeToken}; path=/; max-age=86400`;
+
         set({
           user: {
             id: "1",
@@ -41,13 +45,15 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             lastName: "Mock",
             role: "Student",
           },
-          accessToken: "mock-jwt-" + Date.now(),
+          accessToken: fakeToken,
           isAuthenticated: true,
         });
       },
 
       signOut: async () => {
         await new Promise((resolve) => setTimeout(resolve, 300));
+        // Ta bort cookie
+        document.cookie = "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         set({ user: null, accessToken: null, isAuthenticated: false });
       },
 
