@@ -1,11 +1,29 @@
+"use client";
+
 import { Lock, User } from "lucide-react";
 import Link from "next/link";
+import { useForm, UseFormRegisterReturn } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { registerSchema, type RegisterInput } from "@/lib/schemas/auth";
 
 export default function RegisterPage() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting, isValid },
+  } = useForm<RegisterInput>({
+    resolver: zodResolver(registerSchema),
+    mode: "onTouched",
+  });
+
+  function onSubmit(values: RegisterInput) {
+    console.log("register:", values);
+  }
+
   return (
     <div className="space-y-10">
       <header className="space-y-2">
@@ -18,18 +36,22 @@ export default function RegisterPage() {
         </p>
       </header>
 
-      <form className="space-y-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
         <FieldWithIcon
           id="firstName"
           label="First name"
           placeholder="Type your first name"
           icon={<User aria-hidden className="size-4" />}
+          registration={register("firstName")}
+          error={errors.firstName?.message}
         />
         <FieldWithIcon
           id="lastName"
           label="Last name"
           placeholder="Type your last name"
           icon={<User aria-hidden className="size-4" />}
+          registration={register("lastName")}
+          error={errors.lastName?.message}
         />
         <div className="h-5" aria-hidden />
         <FieldWithIcon
@@ -38,6 +60,8 @@ export default function RegisterPage() {
           type="password"
           placeholder="Type your password"
           icon={<Lock aria-hidden className="size-4" />}
+          registration={register("password")}
+          error={errors.password?.message}
         />
         <FieldWithIcon
           id="confirmPassword"
@@ -45,6 +69,8 @@ export default function RegisterPage() {
           type="password"
           placeholder="Confirm your password"
           icon={<Lock aria-hidden className="size-4" />}
+          registration={register("confirmPassword")}
+          error={errors.confirmPassword?.message}
         />
 
         <div className="flex items-center justify-start gap-2 pt-2">
@@ -57,7 +83,11 @@ export default function RegisterPage() {
           </Label>
         </div>
 
-        <Button type="submit" className="w-full">
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isSubmitting || !isValid}
+        >
           Complete
         </Button>
       </form>
@@ -71,12 +101,16 @@ function FieldWithIcon({
   type = "text",
   placeholder,
   icon,
+  registration,
+  error,
 }: {
   id: string;
   label: string;
   type?: string;
   placeholder?: string;
   icon: React.ReactNode;
+  registration: UseFormRegisterReturn;
+  error?: string;
 }) {
   return (
     <div className="space-y-2">
@@ -90,8 +124,11 @@ function FieldWithIcon({
           type={type}
           placeholder={placeholder}
           className="pl-9"
+          aria-invalid={!!error}
+          {...registration}
         />
       </div>
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }
