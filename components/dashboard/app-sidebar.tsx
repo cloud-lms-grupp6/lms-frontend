@@ -123,6 +123,35 @@ function NavGroup({ label, items }: { label: string; items: NavItem[] }) {
   );
 }
 
+function SidebarCta() {
+  return (
+    <div className="group-data-[collapsible=icon]:hidden">
+      <div className="relative overflow-hidden rounded-2xl p-4 text-white min-h-[110px]">
+        <Image
+          src="/mobile_cto.png"
+          alt="Download App Background"
+          fill
+          sizes="250px"
+          className="object-cover object-center z-0"
+          priority
+        />
+        <div className="absolute inset-0 bg-[#2c3545]/65 z-10" />
+        <div className="relative z-20">
+          <p className="text-sm font-semibold leading-tight">
+            Download Our<br />Mobile App
+          </p>
+          <button
+            type="button"
+            className="mt-3 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer"
+          >
+            Download App
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AppSidebar() {
   return (
     <Sidebar
@@ -139,6 +168,7 @@ export function AppSidebar() {
             alt="Shiko"
             width={110}
             height={36}
+            style={{ height: "auto" }}
             priority
           />
         </Link>
@@ -151,6 +181,7 @@ export function AppSidebar() {
             alt="Shiko"
             width={28}
             height={28}
+            style={{ height: "auto" }}
             priority
           />
         </Link>
@@ -178,19 +209,7 @@ export function AppSidebar() {
             </SidebarMenuItem>
           </SidebarMenu>
 
-          <div className="group-data-[collapsible=icon]:hidden">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#2c3545] to-[#ED5735] p-4 text-white">
-              <p className="text-sm font-semibold leading-tight">
-                Download Our<br />Mobile App
-              </p>
-              <button
-                type="button"
-                className="mt-3 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
-              >
-                Download App
-              </button>
-            </div>
-          </div>
+          <SidebarCta />
         </SidebarFooter>
       </div>
     </Sidebar>

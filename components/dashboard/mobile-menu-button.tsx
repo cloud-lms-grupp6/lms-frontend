@@ -10,12 +10,10 @@ export function MobileMenuButton() {
     <button
       type="button"
       aria-label="Open menu"
-      onClick={() => {
-        setTimeout(() => setOpenMobile(true), 0);
-      }}
-      className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground touch-manipulation select-none sm:hidden"
+      onClick={() => setOpenMobile(true)}
+      className="fixed bottom-6 right-6 z-50 flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:bg-primary/95 transition-colors cursor-pointer md:hidden"
     >
-      <Menu className="size-5" />
+      <Menu className="size-6 pointer-events-none" />
     </button>
   );
 }

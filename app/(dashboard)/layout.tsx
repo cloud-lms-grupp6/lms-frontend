@@ -16,13 +16,13 @@ export default function DashboardLayout({
         <AppSidebar />
         <SidebarInset className="h-full min-h-0 bg-transparent gap-3 overflow-hidden">
           <header className="flex h-14 shrink-0 items-center gap-3 rounded-[18px] bg-card px-4 shadow-sm sm:ml-3">
-            <MobileMenuButton />
             {/* topbar inehåll i nästa steg */}
           </header>
           <main className="min-h-0 flex-1 overflow-auto rounded-[18px] bg-card p-6 shadow-sm sm:ml-3">
             {children}
           </main>
         </SidebarInset>
+        <MobileMenuButton />
       </SidebarProvider>
     </div>
   );
