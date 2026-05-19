@@ -12,9 +12,11 @@ import {
 } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { verifySchema, type VerifyInput } from "@/lib/schemas/auth";
+import { useAuth } from "@/lib/auth/hooks";
 
 export default function VerifyPage() {
   const router = useRouter();
+  const { verify } = useAuth();
 
   const {
     control,
@@ -22,14 +24,14 @@ export default function VerifyPage() {
     formState: { errors, isSubmitting, isValid },
   } = useForm<VerifyInput>({
     resolver: zodResolver(verifySchema),
-    mode: "onChange", // For OTP, onChange gives better immediate feedback
+    mode: "onChange",
     defaultValues: {
       code: "",
     },
   });
 
-  function onSubmit(values: VerifyInput) {
-    console.log("verify code:", values);
+  async function onSubmit(values: VerifyInput) {
+    await verify(values.code);
     router.push("/register");
   }
 

@@ -9,8 +9,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { registerSchema, type RegisterInput } from "@/lib/schemas/auth";
+import { useAuth } from "@/lib/auth/hooks";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { register: authRegister } = useAuth();
+
   const {
     register,
     handleSubmit,
@@ -20,8 +25,9 @@ export default function RegisterPage() {
     mode: "onTouched",
   });
 
-  function onSubmit(values: RegisterInput) {
-    console.log("register:", values);
+  async function onSubmit(values: RegisterInput) {
+    await authRegister(values);
+    router.push("/sign-in");
   }
 
   return (
