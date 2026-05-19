@@ -1,11 +1,33 @@
+"use client";
+
 import { User } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { signInEmailSchema, type SignInEmailInput } from "@/lib/schemas/auth";
 
 export default function SignInPage() {
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting, isValid },
+  } = useForm<SignInEmailInput>({
+    resolver: zodResolver(signInEmailSchema),
+    mode: "onTouched",
+  });
+
+  function onSubmit(values: SignInEmailInput) {
+    console.log("sign-in email:", values);
+    router.push(`/password?email=${encodeURIComponent(values.email)}`);
+  }
+
   return (
     <div className="space-y-12">
       <header className="space-y-2 pb-7">
@@ -15,7 +37,7 @@ export default function SignInPage() {
         </p>
       </header>
 
-      <form className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
         <div className="space-y-2 pb-4">
           <Label htmlFor="email">Email address</Label>
           <div className="relative">
@@ -29,8 +51,13 @@ export default function SignInPage() {
               autoComplete="email"
               placeholder="Type your email address"
               className="pl-9"
+              aria-invalid={!!errors.email}
+              {...register("email")}
             />
           </div>
+          {errors.email && (
+            <p className="text-xs text-destructive">{errors.email.message}</p>
+          )}
           <div className="flex justify-end">
             <Link
               href="#"
@@ -41,7 +68,11 @@ export default function SignInPage() {
           </div>
         </div>
 
-        <Button type="submit" className="w-full">
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isSubmitting || !isValid}
+        >
           Continue
         </Button>
       </form>
@@ -59,7 +90,7 @@ export default function SignInPage() {
           variant="secondary"
           className="bg-background text-muted-foreground hover:bg-background/80"
         >
-          {/* TODO: byt mot riktig MS-logo (4 färgade rutor) */}
+          {/* TODO: replace with real MS logo */}
           <span className="mr-2 inline-block size-4 bg-[conic-gradient(at_50%_50%,#f25022_0_25%,#7fba00_0_50%,#00a4ef_0_75%,#ffb900_0)]" />
           Work or school account
         </Button>
