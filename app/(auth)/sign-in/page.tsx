@@ -3,6 +3,7 @@
 import { User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { signInEmailSchema, type SignInEmailInput } from "@/lib/schemas/auth";
+import { checkEmail, AuthApiError } from "@/lib/auth/api";
 
 export default function SignInPage() {
   const router = useRouter();
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
@@ -23,9 +26,20 @@ export default function SignInPage() {
     mode: "onTouched",
   });
 
-  function onSubmit(values: SignInEmailInput) {
-    console.log("sign-in email:", values);
-    router.push(`/password?email=${encodeURIComponent(values.email)}`);
+  async function onSubmit(values: SignInEmailInput) {
+    setSubmitError(null);
+    try {
+      const res = await checkEmail(values.email);
+      if (!res.exists) {
+        setSubmitError("No account found for that email.");
+        return;
+      }
+      router.push(`/password?email=${encodeURIComponent(values.email)}`);
+    } catch (err) {
+      if (err instanceof AuthApiError && err.code === "network_error")
+        setSubmitError("Could not reach the server. Is auth-api running?");
+      else setSubmitError("Something went wrong. Try again.");
+    }
   }
 
   return (
@@ -60,20 +74,26 @@ export default function SignInPage() {
           )}
           <div className="flex justify-end">
             <Link
-              href="#"
+              href="/register"
               className="text-xs font-medium text-primary hover:underline"
             >
-              Forgot your email address?
+              Need an account? Register
             </Link>
           </div>
         </div>
+
+        {submitError && (
+          <p className="text-sm text-destructive" role="alert">
+            {submitError}
+          </p>
+        )}
 
         <Button
           type="submit"
           className="w-full"
           disabled={isSubmitting || !isValid}
         >
-          Continue
+          {isSubmitting ? "Checking…" : "Continue"}
         </Button>
       </form>
 
@@ -90,7 +110,6 @@ export default function SignInPage() {
           variant="secondary"
           className="bg-background text-muted-foreground hover:bg-background/80"
         >
-          {/* TODO: replace with real MS logo */}
           <span className="mr-2 inline-block size-4 bg-[conic-gradient(at_50%_50%,#f25022_0_25%,#7fba00_0_50%,#00a4ef_0_75%,#ffb900_0)]" />
           Work or school account
         </Button>

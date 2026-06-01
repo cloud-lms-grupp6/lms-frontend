@@ -1,9 +1,9 @@
 "use client";
 
+import { CheckCircle2, FlaskConical } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   InputOTP,
@@ -11,89 +11,188 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
-import { verifySchema, type VerifyInput } from "@/lib/schemas/auth";
 import { useAuth } from "@/lib/auth/hooks";
+import { AuthApiError, requestVerification } from "@/lib/auth/api";
 
-export default function VerifyPage() {
+type Phase = "requesting" | "typing" | "verifying" | "success" | "error";
+
+function VerifyInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email") ?? "";
   const { verify } = useAuth();
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting, isValid },
-  } = useForm<VerifyInput>({
-    resolver: zodResolver(verifySchema),
-    mode: "onChange",
-    defaultValues: {
-      code: "",
-    },
-  });
+  const [code, setCode] = useState("");
+  const [pocCode, setPocCode] = useState<string | null>(null);
+  const [phase, setPhase] = useState<Phase>("requesting");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  async function onSubmit(values: VerifyInput) {
-    await verify(values.code);
-    router.push("/register");
-  }
+  useEffect(() => {
+    if (phase !== "requesting") return;
+    if (!email) {
+      setErrorMsg("Missing email in URL.");
+      setPhase("error");
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await requestVerification(email);
+        if (cancelled) return;
+        if (!res.code) {
+          setErrorMsg("Server did not return a PoC code (not in dev mode).");
+          setPhase("error");
+          return;
+        }
+        setPocCode(res.code);
+        setPhase("typing");
+      } catch (err) {
+        if (cancelled) return;
+        setErrorMsg(
+          err instanceof AuthApiError && err.code === "network_error"
+            ? "Could not reach the server."
+            : "Failed to request verification code."
+        );
+        setPhase("error");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [phase, email]);
+
+  useEffect(() => {
+    if (phase !== "typing" || !pocCode) return;
+    let i = 0;
+    const interval = setInterval(() => {
+      i += 1;
+      setCode(pocCode.slice(0, i));
+      if (i >= pocCode.length) {
+        clearInterval(interval);
+        setTimeout(() => setPhase("verifying"), 350);
+      }
+    }, 110);
+    return () => clearInterval(interval);
+  }, [phase, pocCode]);
+
+  useEffect(() => {
+    if (phase !== "verifying") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        await verify(email, code);
+        if (cancelled) return;
+        setPhase("success");
+        setTimeout(() => {
+          if (!cancelled) router.push("/sign-in");
+        }, 1500);
+      } catch (err) {
+        if (cancelled) return;
+        setErrorMsg(
+          err instanceof AuthApiError
+            ? "Verification failed. Code may be expired."
+            : "Unexpected error during verification."
+        );
+        setPhase("error");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [phase, code, email, verify, router]);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
+      <div
+        className="flex items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300"
+        role="note"
+      >
+        <FlaskConical className="size-4" aria-hidden />
+        <span>
+          <strong>PoC mode</strong> — code is auto-filled. Real email delivery
+          via Azure Service Bus arrives in Phase 6.
+        </span>
+      </div>
+
       <header className="space-y-2">
-        <h1 className="text-5xl my-0">Verification Needed</h1>
+        <h1 className="text-5xl my-0">
+          {phase === "success" ? "Verified" : "Verification Needed"}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          Please verify your account with the verification code that has been
-          sent to your specified email address.
+          {phase === "success" ? (
+            <>Account verified for {email}. Redirecting to sign in…</>
+          ) : (
+            <>
+              Please verify your account with the verification code that has
+              been sent to {email}.
+            </>
+          )}
         </p>
       </header>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-15" noValidate>
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        className="space-y-15"
+        noValidate
+      >
         <div className="space-y-2">
           <Label htmlFor="otp">Enter verification code</Label>
-          <Controller
-            name="code"
-            control={control}
-            render={({ field }) => (
-              <InputOTP
-                maxLength={6}
-                containerClassName="w-full"
-                value={field.value}
-                onChange={field.onChange}
-              >
-                <InputOTPGroup className="w-full justify-between gap-2">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <InputOTPSlot
-                      key={i}
-                      index={i}
-                      className="flex-1 aspect-square h-auto rounded-lg border text-lg"
-                    />
-                  ))}
-                </InputOTPGroup>
-              </InputOTP>
-            )}
-          />
-          {errors.code && (
-            <p className="text-xs text-destructive">{errors.code.message}</p>
-          )}
+          <InputOTP
+            maxLength={6}
+            containerClassName="w-full"
+            value={code}
+            onChange={() => {}}
+            disabled
+          >
+            <InputOTPGroup className="w-full justify-between gap-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <InputOTPSlot
+                  key={i}
+                  index={i}
+                  className={`flex-1 aspect-square h-auto rounded-lg border text-lg ${
+                    phase === "success" ? "border-green-500 text-green-600" : ""
+                  }`}
+                />
+              ))}
+            </InputOTPGroup>
+          </InputOTP>
           <div className="flex items-center justify-between pt-1">
             <span className="text-xs text-muted-foreground">
-              New code can be sent in 15 sec
+              {phase === "requesting" && "Requesting code…"}
+              {phase === "typing" && "Auto-filling code…"}
+              {phase === "verifying" && "Verifying…"}
+              {phase === "success" && (
+                <span className="inline-flex items-center gap-1 text-green-600">
+                  <CheckCircle2 className="size-3.5" aria-hidden />
+                  Verification successful
+                </span>
+              )}
+              {phase === "error" && (
+                <span className="text-destructive">{errorMsg}</span>
+              )}
             </span>
             <Link
               href="#"
-              className="text-xs font-medium text-primary hover:underline"
+              className="pointer-events-none text-xs font-medium text-muted-foreground"
+              aria-disabled
             >
               Resend verification code
             </Link>
           </div>
         </div>
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isSubmitting || !isValid}
-        >
-          Continue
+        <Button type="submit" className="w-full" disabled>
+          {phase === "success" ? "Verified" : "Continue"}
         </Button>
       </form>
     </div>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VerifyInner />
+    </Suspense>
   );
 }
