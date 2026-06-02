@@ -1,27 +1,153 @@
 "use client";
 
-import React from "react";
-import { Lock } from "lucide-react";
+import { Lock, Monitor } from "lucide-react";
 
 export default function SettingsPasswordPage() {
   return (
-    <div className="flex flex-col gap-3 min-h-full">
-      <div className="flex items-center justify-between rounded-card bg-card p-4 shadow-sm h-14">
-        <h1 className="text-lg font-bold text-foreground">Settings &gt; Password</h1>
+    <div className="mx-auto flex max-w-[1180px] flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
+
+        <button className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700">
+          Need Help?
+        </button>
       </div>
 
-      <div className="flex-1 rounded-card bg-card p-6 shadow-sm flex flex-col items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center max-w-sm text-center gap-4">
-          <div className="flex size-14 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-900 text-muted-foreground border border-slate-200/50 dark:border-transparent">
-            <Lock className="size-6 text-muted-foreground" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <h2 className="text-xl font-bold text-foreground">Change Password</h2>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Update your account password and security credentials here.
-            </p>
-          </div>
+      <div className="flex gap-6 text-sm">
+        <a href="/settings" className="px-5 py-2 text-slate-400">
+          General
+        </a>
+
+        <a href="/settings/team" className="px-5 py-2 text-slate-400">
+          Team
+        </a>
+
+        <a
+          href="/settings/password"
+          className="rounded-lg bg-slate-900 px-5 py-2 text-white"
+        >
+          Password
+        </a>
+
+        <a href="/settings/notification" className="px-5 py-2 text-slate-400">
+          Notification
+        </a>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[260px_1fr]">
+        <div>
+          <h2 className="font-bold text-slate-900">Password</h2>
+          <p className="mt-1 text-xs text-slate-400">
+            Please enter your current password to change your password.
+          </p>
         </div>
+
+        <section className="rounded-3xl bg-white p-6 shadow-sm">
+          <h3 className="font-semibold text-slate-900">Password</h3>
+
+          <p className="mt-1 text-xs text-slate-400">
+            Change password. Verification code will be sent to your email address.
+          </p>
+
+          <div className="mt-6 space-y-4">
+            <div>
+              <label className="text-sm font-medium">
+                Current password*
+              </label>
+              <input
+                type="password"
+                defaultValue="password123"
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">
+                New password*
+              </label>
+              <input
+                type="password"
+                defaultValue="password123"
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3"
+              />
+
+              <p className="mt-1 text-xs text-slate-400">
+                Your new password must be more than 10 characters long.
+              </p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">
+                Confirm new password*
+              </label>
+              <input
+                type="password"
+                defaultValue="password123"
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                className="rounded-lg bg-slate-100 px-5 py-2 text-sm text-slate-400"
+              >
+                Back
+              </button>
+
+              <button
+                type="button"
+                className="rounded-lg bg-orange-500 px-5 py-2 text-sm text-white"
+              >
+                Save & Next
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[260px_1fr]">
+        <div>
+          <h2 className="font-bold text-slate-900">
+            Login Activities
+          </h2>
+
+          <p className="mt-1 text-xs text-slate-400">
+            See your login activities
+          </p>
+        </div>
+
+        <section className="rounded-3xl bg-white p-6 shadow-sm">
+          <h3 className="font-semibold text-slate-900">
+            Where you're logged in
+          </h3>
+
+          <p className="mt-1 text-xs text-slate-400">
+            We'll alert you via email if there is any unusual activity on your account.
+          </p>
+
+          <div className="mt-6 space-y-4">
+            {[
+              "Mac - Stockholm, SE, Sweden",
+              "Mac - Uppsala, SE, Sweden",
+              "Mac - Stockholm, SE, Sweden",
+            ].map((device, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-3 border-b border-slate-100 pb-4"
+              >
+                <Monitor className="size-5 text-slate-500" />
+
+                <div>
+                  <p className="text-sm font-medium">{device}</p>
+                  <p className="text-xs text-slate-400">
+                    Chrome · Active Now
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );

@@ -6,9 +6,7 @@ import {
   Bell,
   Camera,
   Flame,
-  Mail,
   Medal,
-  Settings,
   ShieldCheck,
   Star,
   Trophy,
@@ -18,7 +16,7 @@ import {
 
 export default function ProfilePage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex max-w-[1180px] flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">Profile</h1>
 
@@ -36,18 +34,14 @@ export default function ProfilePage() {
         <button className="px-5 py-2 text-slate-400">Notification</button>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
+      <div className="grid gap-6 xl:grid-cols-[320px_720px]">
         <aside className="overflow-hidden rounded-3xl bg-white shadow-sm">
-          <div className="relative h-32 bg-gradient-to-br from-slate-900 via-purple-900 to-pink-500">
-            <div className="absolute inset-0 opacity-40">
-              <div className="h-full w-full bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.4),_transparent_35%)]" />
-            </div>
-          </div>
+          <div className="relative h-32 bg-gradient-to-br from-slate-900 via-purple-900 to-pink-500" />
 
           <div className="-mt-12 flex flex-col items-center px-6 pb-6">
             <div className="relative">
               <Image
-                src="/main.jpg"
+                src="/avatars/main.jpg"
                 alt="Profile avatar"
                 width={88}
                 height={88}
@@ -68,14 +62,7 @@ export default function ProfilePage() {
             <div className="mt-6 w-full">
               <h3 className="font-semibold text-slate-800">Skills</h3>
               <div className="mt-3 flex flex-wrap gap-2">
-                {[
-                  "APP DESIGN",
-                  "WEB DESIGN",
-                  "UI DESIGN",
-                  "DASHBOARD",
-                  "PRODUCT DESIGN",
-                  "UX DESIGN",
-                ].map((skill) => (
+                {["APP DESIGN", "WEB DESIGN", "UI DESIGN", "DASHBOARD", "PRODUCT DESIGN", "UX DESIGN"].map((skill) => (
                   <span
                     key={skill}
                     className="rounded-full bg-slate-100 px-3 py-1 text-[10px] text-slate-500"
@@ -105,7 +92,7 @@ export default function ProfilePage() {
               <p className="mt-3 rounded-2xl bg-slate-50 p-4 text-xs leading-relaxed text-slate-500">
                 A passionate UI/UX Designer with hands-on experience designing
                 intuitive, user-centered digital products across mobile and web
-                platforms. This section will later be loaded from Profile API.
+                platforms.
               </p>
             </div>
           </div>
@@ -168,7 +155,7 @@ export default function ProfilePage() {
                 Description
               </label>
               <textarea
-                rows={6}
+                rows={5}
                 defaultValue="A passionate UI/UX Designer with hands-on experience designing intuitive, user-centered digital products across mobile and web platforms."
                 className="mt-2 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm leading-relaxed outline-none focus:border-orange-400"
               />
@@ -194,41 +181,29 @@ export default function ProfilePage() {
       </div>
 
       <section className="rounded-3xl bg-white p-6 shadow-sm">
-  <div className="flex items-center justify-between">
-    <h2 className="text-xl font-bold text-slate-900">Current Courses</h2>
-    <button className="text-sm font-medium text-orange-500">See All</button>
-  </div>
-
-  <div className="mt-4 grid gap-4 md:grid-cols-3">
-    {[
-      {
-        title: "UI/UX Design",
-        meta: "12 lessons",
-        Icon: ShieldCheck,
-      },
-      {
-        title: "Team Collaboration",
-        meta: "8 lessons",
-        Icon: Users,
-      },
-      {
-        title: "Notifications",
-        meta: "5 lessons",
-        Icon: Bell,
-      },
-    ].map((course) => (
-      <div key={course.title} className="rounded-2xl border p-4">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-orange-100 text-orange-500">
-          <course.Icon className="size-5" />
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-slate-900">Current Courses</h2>
+          <button className="text-sm font-medium text-orange-500">See All</button>
         </div>
-        <h3 className="mt-4 font-semibold text-slate-900">
-          {course.title}
-        </h3>
-        <p className="mt-1 text-sm text-slate-500">{course.meta}</p>
-      </div>
-    ))}
-  </div>
-</section>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          {[
+            { title: "UI/UX Design", meta: "12 lessons", Icon: ShieldCheck },
+            { title: "Team Collaboration", meta: "8 lessons", Icon: Users },
+            { title: "Notifications", meta: "5 lessons", Icon: Bell },
+          ].map((course) => (
+            <div key={course.title} className="rounded-2xl border p-4">
+              <div className="flex size-10 items-center justify-center rounded-xl bg-orange-100 text-orange-500">
+                <course.Icon className="size-5" />
+              </div>
+              <h3 className="mt-4 font-semibold text-slate-900">
+                {course.title}
+              </h3>
+              <p className="mt-1 text-sm text-slate-500">{course.meta}</p>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
