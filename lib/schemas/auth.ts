@@ -20,6 +20,7 @@ export type VerifyInput = z.infer<typeof verifySchema>;
 
 export const registerSchema = z
   .object({
+    email: z.string().min(1, "Email is required").email("Invalid email address"),
     firstName: z.string().min(1, "First name is required").max(50),
     lastName: z.string().min(1, "Last name is required").max(50),
     password: z

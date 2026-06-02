@@ -3,6 +3,7 @@
 import { Lock, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth/hooks";
+import { AuthApiError } from "@/lib/auth/api";
 import { signInPasswordSchema, type SignInPasswordInput } from "@/lib/schemas/auth";
 import { Suspense } from "react";
 
@@ -18,6 +20,7 @@ function PasswordForm() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
   const { signIn } = useAuth();
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
@@ -29,8 +32,21 @@ function PasswordForm() {
   });
 
   async function onSubmit(values: SignInPasswordInput) {
-    await signIn(email, values.password);
-    router.push("/");
+    setSubmitError(null);
+    try {
+      await signIn(email, values.password);
+      router.push("/dashboard");
+    } catch (err) {
+      if (err instanceof AuthApiError) {
+        if (err.code === "invalid_credentials")
+          setSubmitError("Wrong password. Try again.");
+        else if (err.code === "network_error")
+          setSubmitError("Could not reach the server. Is auth-api running?");
+        else setSubmitError("Sign-in failed. Try again.");
+      } else {
+        setSubmitError("Unexpected error. Try again.");
+      }
+    }
   }
 
   return (
@@ -98,12 +114,18 @@ function PasswordForm() {
           </div>
         </div>
 
+        {submitError && (
+          <p className="text-sm text-destructive" role="alert">
+            {submitError}
+          </p>
+        )}
+
         <Button
           type="submit"
           className="w-full"
           disabled={isSubmitting || !isValid}
         >
-          Sign In
+          {isSubmitting ? "Signing in…" : "Sign In"}
         </Button>
       </form>
     </div>

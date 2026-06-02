@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import * as api from "./api";
 
 export type User = {
   id: string;
@@ -18,9 +19,22 @@ type AuthState = {
 type AuthActions = {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  register: (data: any) => Promise<void>;
-  verify: (code: string) => Promise<void>;
+  register: (data: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+  }) => Promise<void>;
+  verify: (email: string, code: string) => Promise<void>;
 };
+
+function setAuthCookie(token: string, expiresInSeconds: number) {
+  document.cookie = `auth-token=${token}; path=/; max-age=${expiresInSeconds}; samesite=lax`;
+}
+
+function clearAuthCookie() {
+  document.cookie = "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+}
 
 export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
@@ -30,43 +44,36 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       isAuthenticated: false,
 
       signIn: async (email, password) => {
-        // ska koppla till backend Auth-Api när den finns
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        const fakeToken = "mock-jwt-" + Date.now();
-        // Sätt en cookie så att middleware.ts kan läsa den
-        document.cookie = `auth-token=${fakeToken}; path=/; max-age=86400`;
-
+        const res = await api.login(email, password);
+        setAuthCookie(res.accessToken, res.expiresIn);
         set({
           user: {
-            id: "1",
-            email,
-            firstName: "Alexander",
-            lastName: "Mock",
-            role: "Student",
+            id: res.user.id,
+            email: res.user.email,
+            firstName: res.user.firstName,
+            lastName: res.user.lastName,
+            role: res.user.roles[0] ?? "Student",
           },
-          accessToken: fakeToken,
+          accessToken: res.accessToken,
           isAuthenticated: true,
         });
       },
 
       signOut: async () => {
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        // Ta bort cookie
-        document.cookie = "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        clearAuthCookie();
         set({ user: null, accessToken: null, isAuthenticated: false });
       },
 
       register: async (data) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await api.register(data);
       },
 
-      verify: async (code) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+      verify: async (email, code) => {
+        await api.verifyEmail(email, code);
       },
     }),
     {
-      name: "lms-auth", // sparar allt i localStorage
+      name: "lms-auth",
     }
   )
 );
