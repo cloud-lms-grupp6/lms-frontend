@@ -16,11 +16,12 @@ Frontend för gruppens **Learning Management System** (kursen *Molntjänster och
 Kräver Node 20 LTS eller senare.
 
 ```bash
+cp .env.example .env.local   # PowerShell: copy .env.example .env.local
 npm install
 npm run dev
 ```
 
-Öppna http://localhost:3000.
+Öppna http://localhost:3000. Standardvärdena i `.env.example` pekar på de driftsatta backend-tjänsterna i Azure, så login funkar direkt utan att köra någon backend lokalt.
 
 ## Bygg
 
@@ -47,11 +48,14 @@ middleware.ts   # route-skydd (inloggning + roller)
 
 ## Miljövariabler
 
-Backend-URL:er sätts som miljövariabler (lokalt i `.env.local`, i produktion i Vercel-dashboarden). `.env.local` är gitignorerad — committa aldrig riktiga värden.
+Backend-URL:er sätts som miljövariabler (lokalt i `.env.local`, i produktion i Vercel-dashboarden). `.env.local` är gitignorerad — committa aldrig riktiga värden. Mallen `.env.example` är committad och visar vilka variabler som behövs; kopiera den till `.env.local` (se *Kör lokalt*).
 
-```
-NEXT_PUBLIC_API_URL=https://<din-backend>.azurewebsites.net
-```
+| Variabel | Pekar på |
+|----------|----------|
+| `NEXT_PUBLIC_API_URL` | Auth-Api (login, register, refresh) |
+| `NEXT_PUBLIC_USERCOURSES_API_URL` | UserCourses-Api (enrollments) |
+
+Båda är `NEXT_PUBLIC_*` → bakas in vid build-time. Ändrad variabel i Vercel kräver redeploy för att slå igenom.
 
 ## Deploy
 
