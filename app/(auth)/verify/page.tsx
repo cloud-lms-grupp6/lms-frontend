@@ -3,7 +3,7 @@
 import { CheckCircle2, FlaskConical } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   InputOTP,
@@ -27,6 +27,10 @@ function VerifyInner() {
   const [phase, setPhase] = useState<Phase>("requesting");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // koden är engångs i backendcachen, request får bara skickas en gång
+  // annars skriver StrictMode dubbelmounten över koden och verify spricker
+  const requestedRef = useRef(false);
+
   useEffect(() => {
     if (phase !== "requesting") return;
     if (!email) {
@@ -34,11 +38,11 @@ function VerifyInner() {
       setPhase("error");
       return;
     }
-    let cancelled = false;
+    if (requestedRef.current) return;
+    requestedRef.current = true;
     (async () => {
       try {
         const res = await requestVerification(email);
-        if (cancelled) return;
         if (!res.code) {
           setErrorMsg("Server did not return a PoC code (not in dev mode).");
           setPhase("error");
@@ -47,7 +51,6 @@ function VerifyInner() {
         setPocCode(res.code);
         setPhase("typing");
       } catch (err) {
-        if (cancelled) return;
         setErrorMsg(
           err instanceof AuthApiError && err.code === "network_error"
             ? "Could not reach the server."
@@ -56,23 +59,30 @@ function VerifyInner() {
         setPhase("error");
       }
     })();
-    return () => {
-      cancelled = true;
-    };
   }, [phase, email]);
 
   useEffect(() => {
     if (phase !== "typing" || !pocCode) return;
     let i = 0;
-    const interval = setInterval(() => {
-      i += 1;
-      setCode(pocCode.slice(0, i));
-      if (i >= pocCode.length) {
-        clearInterval(interval);
-        setTimeout(() => setPhase("verifying"), 350);
-      }
-    }, 110);
-    return () => clearInterval(interval);
+    let interval: ReturnType<typeof setInterval>;
+    let done: ReturnType<typeof setTimeout>;
+    // 1s paus innan första siffran så det syns att något händer
+    const start = setTimeout(() => {
+      interval = setInterval(() => {
+        i += 1;
+        setCode(pocCode.slice(0, i));
+        if (i >= pocCode.length) {
+          clearInterval(interval);
+          // 1s paus på fulla koden innan verify
+          done = setTimeout(() => setPhase("verifying"), 1000);
+        }
+      }, 450);
+    }, 1000);
+    return () => {
+      clearTimeout(start);
+      clearInterval(interval);
+      clearTimeout(done);
+    };
   }, [phase, pocCode]);
 
   useEffect(() => {
@@ -83,9 +93,6 @@ function VerifyInner() {
         await verify(email, code);
         if (cancelled) return;
         setPhase("success");
-        setTimeout(() => {
-          if (!cancelled) router.push("/sign-in");
-        }, 1500);
       } catch (err) {
         if (cancelled) return;
         setErrorMsg(
@@ -100,6 +107,13 @@ function VerifyInner() {
       cancelled = true;
     };
   }, [phase, code, email, verify, router]);
+
+  // egen effekt så redirecten inte avbryts av att phase byts till success
+  useEffect(() => {
+    if (phase !== "success") return;
+    const timer = setTimeout(() => router.push("/sign-in"), 1500);
+    return () => clearTimeout(timer);
+  }, [phase, router]);
 
   return (
     <div className="space-y-10">
@@ -149,8 +163,12 @@ function VerifyInner() {
                 <InputOTPSlot
                   key={i}
                   index={i}
-                  className={`flex-1 aspect-square h-auto rounded-lg border text-lg ${
+                  className={`flex-1 aspect-square h-auto rounded-lg border text-lg transition-transform duration-200 ${
                     phase === "success" ? "border-green-500 text-green-600" : ""
+                  } ${
+                    phase === "typing" && i === code.length - 1
+                      ? "scale-125 border-primary z-10 shadow-md"
+                      : ""
                   }`}
                 />
               ))}
