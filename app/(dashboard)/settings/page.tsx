@@ -2,9 +2,11 @@
 
 import { Camera, User } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
+  const router = useRouter();
+
   return (
     <div className="mx-auto flex max-w-[1180px] flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -15,35 +17,39 @@ export default function SettingsPage() {
         </button>
       </div>
 
-      <div className="flex gap-6 text-sm">
-        <Link
-          href="/settings"
+      <nav className="relative z-[9999] flex items-center gap-6 text-sm">
+        <button
+          type="button"
+          onClick={() => router.push("/settings")}
           className="rounded-lg bg-slate-900 px-5 py-2 text-white"
         >
           General
-        </Link>
+        </button>
 
-        <Link
-          href="/settings/team"
-          className="px-5 py-2 text-slate-400 hover:text-slate-700"
+        <button
+          type="button"
+          onClick={() => router.push("/settings/team")}
+          className="rounded-lg px-5 py-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
         >
           Team
-        </Link>
+        </button>
 
-        <Link
-          href="/settings/password"
-          className="px-5 py-2 text-slate-400 hover:text-slate-700"
+        <button
+          type="button"
+          onClick={() => router.push("/settings/password")}
+          className="rounded-lg px-5 py-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
         >
           Password
-        </Link>
+        </button>
 
-        <Link
-          href="/settings/notification"
-          className="px-5 py-2 text-slate-400 hover:text-slate-700"
+        <button
+          type="button"
+          onClick={() => router.push("/settings/notification")}
+          className="rounded-lg px-5 py-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
         >
           Notification
-        </Link>
-      </div>
+        </button>
+      </nav>
 
       <div className="grid gap-6 xl:grid-cols-[320px_720px]">
         <aside className="overflow-hidden rounded-3xl bg-white shadow-sm">
@@ -90,7 +96,6 @@ export default function SettingsPage() {
               <label className="text-sm font-semibold text-slate-700">
                 First name *
               </label>
-
               <input
                 defaultValue="Hasan"
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none"
@@ -101,7 +106,6 @@ export default function SettingsPage() {
               <label className="text-sm font-semibold text-slate-700">
                 Last name *
               </label>
-
               <input
                 defaultValue="Mahmud"
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none"
@@ -112,7 +116,6 @@ export default function SettingsPage() {
               <label className="text-sm font-semibold text-slate-700">
                 Email
               </label>
-
               <input
                 defaultValue="hasan@gmail.com"
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none"
@@ -123,7 +126,6 @@ export default function SettingsPage() {
               <label className="text-sm font-semibold text-slate-700">
                 Phone number
               </label>
-
               <input
                 placeholder="Enter phone number"
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none"
@@ -134,7 +136,6 @@ export default function SettingsPage() {
               <label className="text-sm font-semibold text-slate-700">
                 Description
               </label>
-
               <textarea
                 rows={5}
                 defaultValue="A passionate UI/UX Designer with hands-on experience designing intuitive, user-centered digital products across mobile and web platforms."
