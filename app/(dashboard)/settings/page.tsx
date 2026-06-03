@@ -3,10 +3,34 @@
 import { Camera, User } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 
 export default function SettingsPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+const [profileImage, setProfileImage] = useState("/avatars/main.jpg");
+
+const handleImageUpload = (
+  e: React.ChangeEvent<HTMLInputElement>
+) => {
+  const file = e.target.files?.[0];
+
+  if (!file) return;
+
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+  ];
+
+  if (!allowedTypes.includes(file.type)) {
+    alert("Only JPG, PNG and WEBP files are allowed.");
+    return;
+  }
+
+  setProfileImage(URL.createObjectURL(file));
+};
   return (
     <div className="mx-auto flex max-w-[1180px] flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -57,17 +81,29 @@ export default function SettingsPage() {
 
           <div className="-mt-12 flex flex-col items-center px-6 pb-6">
             <div className="relative">
-              <Image
-                src="/avatars/main.jpg"
-                alt="Profile avatar"
-                width={88}
-                height={88}
-                className="rounded-full border-4 border-white object-cover"
-              />
+              <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+           className="hidden"
+          onChange={handleImageUpload}
+          />
 
-              <button className="absolute bottom-1 right-1 flex size-7 items-center justify-center rounded-full bg-orange-500 text-white">
-                <Camera className="size-3.5" />
-              </button>
+         <Image
+         src={profileImage}
+        alt="Profile avatar"
+         width={88}
+          height={88}
+           className="rounded-full border-4 border-white object-cover"
+           />
+
+      <button
+           type="button"
+           onClick={() => fileInputRef.current?.click()}
+          className="absolute bottom-1 right-1 z-10 flex size-7 items-center justify-center rounded-full bg-orange-500 text-white"
+           >
+           <Camera className="size-3.5" />
+            </button>
             </div>
 
             <h2 className="mt-3 text-lg font-bold text-slate-900">
@@ -86,9 +122,13 @@ export default function SettingsPage() {
               <User className="size-6" />
             </div>
 
-            <button className="rounded-lg border px-4 py-2 text-sm font-medium text-slate-700">
-              Upload photo
-            </button>
+            <button
+            type="button"
+           onClick={() => fileInputRef.current?.click()}
+            className="rounded-lg border px-4 py-2 text-sm font-medium text-slate-700"
+           >
+           Upload photo
+             </button>
           </div>
 
           <form className="mt-6 space-y-5">
