@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5097";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5145";
 
 export type AuthError =
   | "invalid_credentials"
