@@ -66,6 +66,24 @@ export async function getCourseParticipants(courseId: string, token: string): Pr
   return raw.map(mapEnrollment);
 }
 
+export async function enroll(courseId: string, token: string): Promise<Enrollment> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/enrollments`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ courseId }),
+    });
+  } catch {
+    throw new UserCoursesApiError(0);
+  }
+  if (!res.ok) throw new UserCoursesApiError(res.status);
+  return mapEnrollment((await res.json()) as RawEnrollment);
+}
+
 export async function unenroll(id: string, token: string): Promise<void> {
   let res: Response;
   try {
