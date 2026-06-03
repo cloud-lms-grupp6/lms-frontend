@@ -2,6 +2,7 @@
 
 import { Camera, User } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function SettingsPage() {
   return (
@@ -15,24 +16,33 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex gap-6 text-sm">
-        <a
+        <Link
           href="/settings"
           className="rounded-lg bg-slate-900 px-5 py-2 text-white"
         >
           General
-        </a>
+        </Link>
 
-        <a href="/settings/team" className="px-5 py-2 text-slate-400">
+        <Link
+          href="/settings/team"
+          className="px-5 py-2 text-slate-400 hover:text-slate-700"
+        >
           Team
-        </a>
+        </Link>
 
-        <a href="/settings/password" className="px-5 py-2 text-slate-400">
+        <Link
+          href="/settings/password"
+          className="px-5 py-2 text-slate-400 hover:text-slate-700"
+        >
           Password
-        </a>
+        </Link>
 
-        <a href="/settings/notification" className="px-5 py-2 text-slate-400">
+        <Link
+          href="/settings/notification"
+          className="px-5 py-2 text-slate-400 hover:text-slate-700"
+        >
           Notification
-        </a>
+        </Link>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[320px_720px]">

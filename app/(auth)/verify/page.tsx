@@ -24,30 +24,33 @@ function VerifyInner() {
 
   const [code, setCode] = useState("");
   const [pocCode, setPocCode] = useState<string | null>(null);
-  const [phase, setPhase] = useState<Phase>("requesting");
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [phase, setPhase] = useState<Phase>(email ? "requesting" : "error");
+  const [errorMsg, setErrorMsg] = useState<string | null>(
+    email ? null : "Missing email in URL."
+  );
 
   useEffect(() => {
     if (phase !== "requesting") return;
-    if (!email) {
-      setErrorMsg("Missing email in URL.");
-      setPhase("error");
-      return;
-    }
+
     let cancelled = false;
-    (async () => {
+
+    async function run() {
       try {
         const res = await requestVerification(email);
+
         if (cancelled) return;
+
         if (!res.code) {
           setErrorMsg("Server did not return a PoC code (not in dev mode).");
           setPhase("error");
           return;
         }
+
         setPocCode(res.code);
         setPhase("typing");
       } catch (err) {
         if (cancelled) return;
+
         setErrorMsg(
           err instanceof AuthApiError && err.code === "network_error"
             ? "Could not reach the server."
@@ -55,7 +58,10 @@ function VerifyInner() {
         );
         setPhase("error");
       }
-    })();
+    }
+
+    run();
+
     return () => {
       cancelled = true;
     };
@@ -63,31 +69,41 @@ function VerifyInner() {
 
   useEffect(() => {
     if (phase !== "typing" || !pocCode) return;
+
     let i = 0;
+
     const interval = setInterval(() => {
       i += 1;
       setCode(pocCode.slice(0, i));
+
       if (i >= pocCode.length) {
         clearInterval(interval);
         setTimeout(() => setPhase("verifying"), 350);
       }
     }, 110);
+
     return () => clearInterval(interval);
   }, [phase, pocCode]);
 
   useEffect(() => {
     if (phase !== "verifying") return;
+
     let cancelled = false;
-    (async () => {
+
+    async function run() {
       try {
         await verify(email, code);
+
         if (cancelled) return;
+
         setPhase("success");
+
         setTimeout(() => {
           if (!cancelled) router.push("/sign-in");
         }, 1500);
       } catch (err) {
         if (cancelled) return;
+
         setErrorMsg(
           err instanceof AuthApiError
             ? "Verification failed. Code may be expired."
@@ -95,7 +111,10 @@ function VerifyInner() {
         );
         setPhase("error");
       }
-    })();
+    }
+
+    run();
+
     return () => {
       cancelled = true;
     };
@@ -137,6 +156,7 @@ function VerifyInner() {
       >
         <div className="space-y-2">
           <Label htmlFor="otp">Enter verification code</Label>
+
           <InputOTP
             maxLength={6}
             containerClassName="w-full"
@@ -156,6 +176,7 @@ function VerifyInner() {
               ))}
             </InputOTPGroup>
           </InputOTP>
+
           <div className="flex items-center justify-between pt-1">
             <span className="text-xs text-muted-foreground">
               {phase === "requesting" && "Requesting code…"}
@@ -171,6 +192,7 @@ function VerifyInner() {
                 <span className="text-destructive">{errorMsg}</span>
               )}
             </span>
+
             <Link
               href="#"
               className="pointer-events-none text-xs font-medium text-muted-foreground"

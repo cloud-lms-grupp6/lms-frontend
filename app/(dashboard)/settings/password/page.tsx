@@ -1,8 +1,63 @@
 "use client";
 
-import { Lock, Monitor } from "lucide-react";
+import { Monitor } from "lucide-react";
+import { FormEvent, useState } from "react";
+
+const API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL ?? "http://localhost:5097";
 
 export default function SettingsPasswordPage() {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatusMessage("");
+
+    if (newPassword.length <= 10) {
+      setStatusMessage("New password must be more than 10 characters long.");
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setStatusMessage("New passwords do not match.");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const response = await fetch(`${API_URL}/api/auth/change-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          confirmNewPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        setStatusMessage("Could not change password.");
+        return;
+      }
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setStatusMessage("Password changed successfully.");
+    } catch {
+      setStatusMessage("Could not change password.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div className="mx-auto flex max-w-[1180px] flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -46,29 +101,30 @@ export default function SettingsPasswordPage() {
           <h3 className="font-semibold text-slate-900">Password</h3>
 
           <p className="mt-1 text-xs text-slate-400">
-            Change password. Verification code will be sent to your email address.
+            Change password. Verification code will be sent to your email
+            address.
           </p>
 
-          <div className="mt-6 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div>
-              <label className="text-sm font-medium">
-                Current password*
-              </label>
+              <label className="text-sm font-medium">Current password*</label>
               <input
                 type="password"
-                defaultValue="password123"
+                value={currentPassword}
+                onChange={(event) => setCurrentPassword(event.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3"
+                required
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium">
-                New password*
-              </label>
+              <label className="text-sm font-medium">New password*</label>
               <input
                 type="password"
-                defaultValue="password123"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3"
+                required
               />
 
               <p className="mt-1 text-xs text-slate-400">
@@ -82,35 +138,48 @@ export default function SettingsPasswordPage() {
               </label>
               <input
                 type="password"
-                defaultValue="password123"
+                value={confirmNewPassword}
+                onChange={(event) =>
+                  setConfirmNewPassword(event.target.value)
+                }
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3"
+                required
               />
             </div>
+
+            {statusMessage && (
+              <p className="text-sm text-slate-500">{statusMessage}</p>
+            )}
 
             <div className="flex gap-3">
               <button
                 type="button"
+                onClick={() => {
+                  setCurrentPassword("");
+                  setNewPassword("");
+                  setConfirmNewPassword("");
+                  setStatusMessage("");
+                }}
                 className="rounded-lg bg-slate-100 px-5 py-2 text-sm text-slate-400"
               >
                 Back
               </button>
 
               <button
-                type="button"
-                className="rounded-lg bg-orange-500 px-5 py-2 text-sm text-white"
+                type="submit"
+                disabled={isLoading}
+                className="rounded-lg bg-orange-500 px-5 py-2 text-sm text-white disabled:opacity-60"
               >
-                Save & Next
+                {isLoading ? "Saving..." : "Save & Next"}
               </button>
             </div>
-          </div>
+          </form>
         </section>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[260px_1fr]">
         <div>
-          <h2 className="font-bold text-slate-900">
-            Login Activities
-          </h2>
+          <h2 className="font-bold text-slate-900">Login Activities</h2>
 
           <p className="mt-1 text-xs text-slate-400">
             See your login activities
@@ -119,11 +188,12 @@ export default function SettingsPasswordPage() {
 
         <section className="rounded-3xl bg-white p-6 shadow-sm">
           <h3 className="font-semibold text-slate-900">
-            Where you're logged in
+            Where you&apos;re logged in
           </h3>
 
           <p className="mt-1 text-xs text-slate-400">
-            We'll alert you via email if there is any unusual activity on your account.
+            We&apos;ll alert you via email if there is any unusual activity on
+            your account.
           </p>
 
           <div className="mt-6 space-y-4">

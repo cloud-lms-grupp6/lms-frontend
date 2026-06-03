@@ -20,7 +20,7 @@ export default function CoursesPage() {
           <div className="flex flex-col gap-2">
             <h2 className="text-xl font-bold text-foreground">No Courses Found</h2>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              You aren't enrolled in any courses yet. Once courses are loaded from the APIs, they will appear here.
+              You aren&apos;t enrolled in any courses yet.. Once courses are loaded from the APIs, they will appear here.
             </p>
           </div>
         </div>
