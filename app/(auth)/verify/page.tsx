@@ -29,34 +29,24 @@ function VerifyInner() {
     email ? null : "Missing email in URL."
   );
 
-  // koden är engångs i backendcachen, request får bara skickas en gång
-  // annars skriver StrictMode dubbelmounten över koden och verify spricker
   const requestedRef = useRef(false);
 
   useEffect(() => {
     if (phase !== "requesting") return;
-<<<<<<< HEAD
 
-    let cancelled = false;
-
-    async function run() {
-      try {
-        const res = await requestVerification(email);
-
-        if (cancelled) return;
-
-=======
     if (!email) {
       setErrorMsg("Missing email in URL.");
       setPhase("error");
       return;
     }
+
     if (requestedRef.current) return;
     requestedRef.current = true;
-    (async () => {
+
+    async function run() {
       try {
         const res = await requestVerification(email);
->>>>>>> origin/main
+
         if (!res.code) {
           setErrorMsg("Server did not return a PoC code (not in dev mode).");
           setPhase("error");
@@ -66,11 +56,6 @@ function VerifyInner() {
         setPocCode(res.code);
         setPhase("typing");
       } catch (err) {
-<<<<<<< HEAD
-        if (cancelled) return;
-
-=======
->>>>>>> origin/main
         setErrorMsg(
           err instanceof AuthApiError && err.code === "network_error"
             ? "Could not reach the server."
@@ -78,57 +63,35 @@ function VerifyInner() {
         );
         setPhase("error");
       }
-<<<<<<< HEAD
     }
 
     run();
-
-    return () => {
-      cancelled = true;
-    };
-=======
-    })();
->>>>>>> origin/main
   }, [phase, email]);
 
   useEffect(() => {
     if (phase !== "typing" || !pocCode) return;
 
     let i = 0;
-<<<<<<< HEAD
-
-    const interval = setInterval(() => {
-      i += 1;
-      setCode(pocCode.slice(0, i));
-
-      if (i >= pocCode.length) {
-        clearInterval(interval);
-        setTimeout(() => setPhase("verifying"), 350);
-      }
-    }, 110);
-
-    return () => clearInterval(interval);
-=======
     let interval: ReturnType<typeof setInterval>;
     let done: ReturnType<typeof setTimeout>;
-    // 1s paus innan första siffran så det syns att något händer
+
     const start = setTimeout(() => {
       interval = setInterval(() => {
         i += 1;
         setCode(pocCode.slice(0, i));
+
         if (i >= pocCode.length) {
           clearInterval(interval);
-          // 1s paus på fulla koden innan verify
           done = setTimeout(() => setPhase("verifying"), 1000);
         }
       }, 450);
     }, 1000);
+
     return () => {
       clearTimeout(start);
       clearInterval(interval);
       clearTimeout(done);
     };
->>>>>>> origin/main
   }, [phase, pocCode]);
 
   useEffect(() => {
@@ -143,13 +106,6 @@ function VerifyInner() {
         if (cancelled) return;
 
         setPhase("success");
-<<<<<<< HEAD
-
-        setTimeout(() => {
-          if (!cancelled) router.push("/sign-in");
-        }, 1500);
-=======
->>>>>>> origin/main
       } catch (err) {
         if (cancelled) return;
 
@@ -167,11 +123,11 @@ function VerifyInner() {
     return () => {
       cancelled = true;
     };
-  }, [phase, code, email, verify, router]);
+  }, [phase, code, email, verify]);
 
-  // egen effekt så redirecten inte avbryts av att phase byts till success
   useEffect(() => {
     if (phase !== "success") return;
+
     const timer = setTimeout(() => router.push("/sign-in"), 1500);
     return () => clearTimeout(timer);
   }, [phase, router]);

@@ -34,6 +34,7 @@ export default function CoursesPage() {
   React.useEffect(() => {
     if (!user || !token) return;
     let active = true;
+
     (async () => {
       try {
         const data = await getMyEnrollments(user.id, token);
@@ -45,6 +46,7 @@ export default function CoursesPage() {
         if (active) setEnrollmentsError(true);
       }
     })();
+
     return () => {
       active = false;
     };
@@ -53,6 +55,7 @@ export default function CoursesPage() {
   React.useEffect(() => {
     if (!token) return;
     let active = true;
+
     (async () => {
       try {
         const data = await listCourses(token);
@@ -64,6 +67,7 @@ export default function CoursesPage() {
         if (active) setCatalogError(true);
       }
     })();
+
     return () => {
       active = false;
     };
@@ -71,17 +75,19 @@ export default function CoursesPage() {
 
   const enrolledCourseIds = React.useMemo(
     () => new Set(enrollments?.map((e) => e.courseId) ?? []),
-    [enrollments],
+    [enrollments]
   );
 
   const courseTitles = React.useMemo(
     () => new Map(catalog?.map((c) => [c.id, c.title]) ?? []),
-    [catalog],
+    [catalog]
   );
 
   async function handleUnenroll(id: string) {
     if (!token) return;
+
     setRemovingId(id);
+
     try {
       await unenroll(id, token);
       setEnrollments((prev) => prev?.filter((e) => e.id !== id) ?? null);
@@ -94,7 +100,9 @@ export default function CoursesPage() {
 
   async function handleEnroll(courseId: string) {
     if (!token) return;
+
     setEnrollingId(courseId);
+
     try {
       const created = await enroll(courseId, token);
       setEnrollments((prev) => (prev ? [...prev, created] : [created]));
@@ -115,6 +123,7 @@ export default function CoursesPage() {
         >
           My Courses
         </Button>
+
         <Button
           variant={tab === "catalog" ? "default" : "ghost"}
           size="sm"
@@ -124,21 +133,6 @@ export default function CoursesPage() {
         </Button>
       </div>
 
-<<<<<<< HEAD
-      {/* Main Empty Content Card */}
-      <div className="flex-1 rounded-card bg-card p-6 shadow-sm flex flex-col items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center max-w-sm text-center gap-4">
-          <div className="flex size-14 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-900 text-muted-foreground border border-slate-200/50 dark:border-transparent">
-            <BookOpen className="size-6 text-muted-foreground" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <h2 className="text-xl font-bold text-foreground">No Courses Found</h2>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              You aren&apos;t enrolled in any courses yet.. Once courses are loaded from the APIs, they will appear here.
-            </p>
-          </div>
-        </div>
-=======
       <div className="flex-1 rounded-card bg-card p-6 shadow-sm">
         {tab === "mine" && (
           <MyCourses
@@ -160,7 +154,6 @@ export default function CoursesPage() {
             onEnroll={handleEnroll}
           />
         )}
->>>>>>> origin/main
       </div>
     </div>
   );
@@ -197,6 +190,7 @@ function MyCourses({
         <p className="text-sm text-muted-foreground">
           Could not load your courses. Please try again.
         </p>
+
         <Button variant="outline" size="sm" onClick={onRetry}>
           Retry
         </Button>
@@ -210,10 +204,12 @@ function MyCourses({
         <div className="flex size-14 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-900 text-muted-foreground border border-slate-200/50 dark:border-transparent">
           <BookOpen className="size-6 text-muted-foreground" />
         </div>
+
         <div className="flex flex-col gap-2 max-w-sm">
           <h2 className="text-xl font-bold text-foreground">No Courses Found</h2>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            You aren&apos;t enrolled in any courses yet. Browse the catalog to enroll.
+            You aren&apos;t enrolled in any courses yet. Browse the catalog to
+            enroll.
           </p>
         </div>
       </div>
@@ -231,16 +227,19 @@ function MyCourses({
             <div className="flex size-10 items-center justify-center rounded-xl bg-white dark:bg-slate-800 shadow-xs shrink-0 text-sky-500">
               <BookOpen className="size-5" />
             </div>
+
             <div className="flex flex-col min-w-0">
               <span className="truncate text-xs sm:text-sm font-bold text-foreground">
                 {courseTitles.get(e.courseId) ?? e.courseId}
               </span>
+
               <span className="text-[10px] text-muted-foreground mt-0.5">
                 {e.role} &bull; {e.status} &bull; enrolled{" "}
                 {new Date(e.enrolledAt).toLocaleDateString()}
               </span>
             </div>
           </div>
+
           <Button
             variant="destructive"
             size="sm"
@@ -293,6 +292,7 @@ function Catalog({
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {catalog?.map((c, i) => {
         const enrolled = enrolledCourseIds.has(c.id);
+
         return (
           <li
             key={c.id}
@@ -312,7 +312,11 @@ function Catalog({
               <span className="flex size-5 items-center justify-center rounded-full bg-muted text-muted-foreground shrink-0">
                 <BookOpen className="size-3" />
               </span>
-              <span className="truncate text-xs text-muted-foreground">{c.category}</span>
+
+              <span className="truncate text-xs text-muted-foreground">
+                {c.category}
+              </span>
+
               <span className="ml-auto shrink-0 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-bold">
                 {c.level}
               </span>
@@ -323,6 +327,7 @@ function Catalog({
                 <Clock className="size-3" />
                 {c.durationHours} hr
               </span>
+
               {enrolled ? (
                 <span className="bg-completed-bg text-completed px-2.5 py-1.5 rounded-full text-[10px] font-bold">
                   Enrolled
