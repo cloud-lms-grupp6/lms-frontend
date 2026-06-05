@@ -26,9 +26,7 @@ export default function DashboardLayout({
           </main>
         </SidebarInset>
 
-        <div className="pointer-events-none">
-          <MobileMenuButton />
-        </div>
+        <MobileMenuButton />
       </SidebarProvider>
     </div>
   );
