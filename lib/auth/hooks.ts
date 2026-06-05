@@ -3,6 +3,7 @@ import { useAuthStore } from "./store";
 // Det här är bara en genväg för att slippa skriva useAuthStore i alla komponenter
 export function useAuth() {
   const user = useAuthStore((state) => state.user);
+  const accessToken = useAuthStore((state) => state.accessToken);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const signIn = useAuthStore((state) => state.signIn);
   const signOut = useAuthStore((state) => state.signOut);
@@ -11,6 +12,7 @@ export function useAuth() {
 
   return {
     user,
+    accessToken,
     isAuthenticated,
     signIn,
     signOut,

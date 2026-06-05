@@ -2,7 +2,8 @@
 
 import { FormEvent, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { login, AuthApiError } from "@/lib/auth/api";
+import { AuthApiError } from "@/lib/auth/api";
+import { useAuth } from "@/lib/auth/hooks";
 
 export default function PasswordPage() {
   return (
@@ -15,6 +16,7 @@ export default function PasswordPage() {
 function PasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { signIn } = useAuth();
 
   const email = searchParams.get("email") ?? "";
   const [password, setPassword] = useState("");
@@ -28,11 +30,7 @@ function PasswordForm() {
     try {
       setIsLoading(true);
 
-      const res = await login(email, password);
-
-      localStorage.setItem("token", res.accessToken);
-      localStorage.setItem("user", JSON.stringify(res.user));
-      document.cookie = `auth-token=${res.accessToken}; path=/; max-age=${res.expiresIn}; SameSite=Lax`;
+      await signIn(email, password);
 
       router.push("/profile");
     } catch (err) {

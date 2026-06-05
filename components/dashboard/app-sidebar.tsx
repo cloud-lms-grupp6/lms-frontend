@@ -2,20 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
-  Bell,
   BookOpen,
   Calendar,
   HelpCircle,
   LayoutDashboard,
-  Lock,
   LogOut,
   Settings,
   User,
   Users,
   Video,
 } from "lucide-react";
+
+import { useAuth } from "@/lib/auth/hooks";
 
 import {
   Sidebar,
@@ -144,6 +144,14 @@ function SidebarCta() {
 }
 
 export function AppSidebar() {
+  const router = useRouter();
+  const { signOut } = useAuth();
+
+  async function handleSignOut() {
+    await signOut();
+    router.push("/sign-in");
+  }
+
   return (
     <Sidebar
       collapsible="icon"
@@ -189,7 +197,9 @@ export function AppSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
+                type="button"
                 tooltip="Log Out"
+                onClick={handleSignOut}
                 className="h-14! text-base gap-3 rounded-full pl-4 pr-4 text-primary hover:bg-accent hover:text-primary group-data-[collapsible=icon]:size-14! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:[&>span:last-child]:hidden"
               >
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground [&>svg]:size-5">
