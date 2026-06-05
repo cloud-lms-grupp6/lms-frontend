@@ -1,10 +1,18 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { login, AuthApiError } from "@/lib/auth/api";
 
 export default function PasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <PasswordForm />
+    </Suspense>
+  );
+}
+
+function PasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -24,6 +32,7 @@ export default function PasswordPage() {
 
       localStorage.setItem("token", res.accessToken);
       localStorage.setItem("user", JSON.stringify(res.user));
+      document.cookie = `auth-token=${res.accessToken}; path=/; max-age=${res.expiresIn}; SameSite=Lax`;
 
       router.push("/profile");
     } catch (err) {
