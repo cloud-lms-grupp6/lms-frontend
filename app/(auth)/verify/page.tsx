@@ -19,35 +19,50 @@ type Phase = "requesting" | "typing" | "verifying" | "success" | "error";
 function VerifyInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Hämtar e-postadressen från URL:en, t.ex. /verify?email=test@test.com
   const email = searchParams.get("email") ?? "";
+
+  // verify kommer från auth-hooken och används för att verifiera koden mot backend.
   const { verify } = useAuth();
 
+  // State för verifieringskoden och vilket steg sidan befinner sig i.
   const [code, setCode] = useState("");
   const [pocCode, setPocCode] = useState<string | null>(null);
-  const [phase, setPhase] = useState<Phase>("requesting");
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [phase, setPhase] = useState<Phase>(email ? "requesting" : "error");
+  const [errorMsg, setErrorMsg] = useState<string | null>(
+    email ? null : "Missing email in URL."
+  );
 
-  // koden är engångs i backendcachen, request får bara skickas en gång
-  // annars skriver StrictMode dubbelmounten över koden och verify spricker
+  // AI användes som stöd för att förstå varför requesten kunde köras två gånger i React StrictMode.
+  // useRef används här för att säkerställa att verifieringskoden bara begärs en gång.
   const requestedRef = useRef(false);
 
   useEffect(() => {
     if (phase !== "requesting") return;
+
     if (!email) {
       setErrorMsg("Missing email in URL.");
       setPhase("error");
       return;
     }
+
+    // Hindrar att requestVerification körs flera gånger.
     if (requestedRef.current) return;
     requestedRef.current = true;
-    (async () => {
+
+    async function run() {
       try {
+        // Skickar en request till backend för att skapa/hämta verifieringskod.
         const res = await requestVerification(email);
+
         if (!res.code) {
           setErrorMsg("Server did not return a PoC code (not in dev mode).");
           setPhase("error");
           return;
         }
+
+        // Sparar koden lokalt och går vidare till auto-fill-steget.
         setPocCode(res.code);
         setPhase("typing");
       } catch (err) {
@@ -58,26 +73,33 @@ function VerifyInner() {
         );
         setPhase("error");
       }
-    })();
+    }
+
+    run();
   }, [phase, email]);
 
   useEffect(() => {
     if (phase !== "typing" || !pocCode) return;
+
     let i = 0;
     let interval: ReturnType<typeof setInterval>;
     let done: ReturnType<typeof setTimeout>;
-    // 1s paus innan första siffran så det syns att något händer
+
+    // AI användes för att ta fram idén med en enkel auto-fill-animation.
+    // Funktionen fyller i koden stegvis så att användaren ser vad som händer i PoC-läget.
     const start = setTimeout(() => {
       interval = setInterval(() => {
         i += 1;
         setCode(pocCode.slice(0, i));
+
         if (i >= pocCode.length) {
           clearInterval(interval);
-          // 1s paus på fulla koden innan verify
           done = setTimeout(() => setPhase("verifying"), 1000);
         }
       }, 450);
     }, 1000);
+
+    // Rensar timers när komponenten uppdateras eller tas bort.
     return () => {
       clearTimeout(start);
       clearInterval(interval);
@@ -87,14 +109,20 @@ function VerifyInner() {
 
   useEffect(() => {
     if (phase !== "verifying") return;
+
     let cancelled = false;
-    (async () => {
+
+    async function run() {
       try {
+        // Skickar e-post och kod till backend för verifiering.
         await verify(email, code);
+
         if (cancelled) return;
+
         setPhase("success");
       } catch (err) {
         if (cancelled) return;
+
         setErrorMsg(
           err instanceof AuthApiError
             ? "Verification failed. Code may be expired."
@@ -102,15 +130,20 @@ function VerifyInner() {
         );
         setPhase("error");
       }
-    })();
+    }
+
+    run();
+
+    // Hindrar state updates om komponenten hinner avmonteras.
     return () => {
       cancelled = true;
     };
-  }, [phase, code, email, verify, router]);
+  }, [phase, code, email, verify]);
 
-  // egen effekt så redirecten inte avbryts av att phase byts till success
   useEffect(() => {
     if (phase !== "success") return;
+
+    // När verifieringen lyckas skickas användaren vidare till inloggningssidan.
     const timer = setTimeout(() => router.push("/sign-in"), 1500);
     return () => clearTimeout(timer);
   }, [phase, router]);
@@ -151,6 +184,7 @@ function VerifyInner() {
       >
         <div className="space-y-2">
           <Label htmlFor="otp">Enter verification code</Label>
+
           <InputOTP
             maxLength={6}
             containerClassName="w-full"
@@ -174,6 +208,7 @@ function VerifyInner() {
               ))}
             </InputOTPGroup>
           </InputOTP>
+
           <div className="flex items-center justify-between pt-1">
             <span className="text-xs text-muted-foreground">
               {phase === "requesting" && "Requesting code…"}
@@ -189,6 +224,7 @@ function VerifyInner() {
                 <span className="text-destructive">{errorMsg}</span>
               )}
             </span>
+
             <Link
               href="#"
               className="pointer-events-none text-xs font-medium text-muted-foreground"

@@ -14,6 +14,13 @@ import {
   Users,
 } from "lucide-react";
 
+// Profile-sidan visar användarens profilinformation, kompetenser,
+// prestationer och aktuella kurser.
+//
+// AI användes som stöd för layoutstruktur och vissa UI-förslag.
+// Designen anpassades därefter manuellt utifrån Figma-skissen.
+
+// Huvudkomponent för profilsidan i LMS-systemet.
 export default function ProfilePage() {
   return (
     <div className="mx-auto flex max-w-[1180px] flex-col gap-6">
@@ -35,11 +42,13 @@ export default function ProfilePage() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[320px_720px]">
+        {/* Visar användarens profilinformation, kompetenser och prestationer. */}
         <aside className="overflow-hidden rounded-3xl bg-white shadow-sm">
           <div className="relative h-32 bg-gradient-to-br from-slate-900 via-purple-900 to-pink-500" />
 
           <div className="-mt-12 flex flex-col items-center px-6 pb-6">
             <div className="relative">
+              {/* Profilbild för användaren. */}
               <Image
                 src="/avatars/main.jpg"
                 alt="Profile avatar"
@@ -47,6 +56,8 @@ export default function ProfilePage() {
                 height={88}
                 className="rounded-full border-4 border-white object-cover"
               />
+
+              {/* Knapp för framtida uppladdning eller byte av profilbild. */}
               <button className="absolute bottom-1 right-1 flex size-7 items-center justify-center rounded-full bg-orange-500 text-white">
                 <Camera className="size-3.5" />
               </button>
@@ -55,6 +66,7 @@ export default function ProfilePage() {
             <h2 className="mt-3 text-lg font-bold text-slate-900">
               Hasan Mahmud
             </h2>
+
             <span className="mt-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-600">
               Student
             </span>
@@ -62,7 +74,15 @@ export default function ProfilePage() {
             <div className="mt-6 w-full">
               <h3 className="font-semibold text-slate-800">Skills</h3>
               <div className="mt-3 flex flex-wrap gap-2">
-                {["APP DESIGN", "WEB DESIGN", "UI DESIGN", "DASHBOARD", "PRODUCT DESIGN", "UX DESIGN"].map((skill) => (
+                {/* Renderar skills dynamiskt från en lista. */}
+                {[
+                  "APP DESIGN",
+                  "WEB DESIGN",
+                  "UI DESIGN",
+                  "DASHBOARD",
+                  "PRODUCT DESIGN",
+                  "UX DESIGN",
+                ].map((skill) => (
                   <span
                     key={skill}
                     className="rounded-full bg-slate-100 px-3 py-1 text-[10px] text-slate-500"
@@ -76,6 +96,7 @@ export default function ProfilePage() {
             <div className="mt-6 w-full">
               <h3 className="font-semibold text-slate-800">Achievements</h3>
               <div className="mt-3 flex gap-3">
+                {/* Renderar achievements med ikoner från lucide-react. */}
                 {[Medal, Award, Star, Flame, Trophy].map((Icon, index) => (
                   <div
                     key={index}
@@ -109,6 +130,7 @@ export default function ProfilePage() {
             </button>
           </div>
 
+          {/* Formulär för redigering av användarens profiluppgifter. */}
           <form className="mt-6 space-y-5">
             <div>
               <label className="text-sm font-semibold text-slate-700">
@@ -169,6 +191,7 @@ export default function ProfilePage() {
                 Cancel
               </button>
 
+              {/* Sparar användarens profiländringar. */}
               <button
                 type="button"
                 className="rounded-lg bg-orange-500 px-8 py-2 text-sm font-medium text-white hover:bg-orange-600"
@@ -180,6 +203,7 @@ export default function ProfilePage() {
         </section>
       </div>
 
+      {/* Visar användarens aktuella kurser i LMS-systemet. */}
       <section className="rounded-3xl bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-900">Current Courses</h2>
@@ -187,6 +211,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="mt-4 grid gap-4 md:grid-cols-3">
+          {/* Renderar kurskort dynamiskt från en lista av kurser. */}
           {[
             { title: "UI/UX Design", meta: "12 lessons", Icon: ShieldCheck },
             { title: "Team Collaboration", meta: "8 lessons", Icon: Users },

@@ -1,141 +1,86 @@
 "use client";
 
-import { Lock, User } from "lucide-react";
-import Link from "next/link";
+import { FormEvent, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAuth } from "@/lib/auth/hooks";
-import { AuthApiError } from "@/lib/auth/api";
-import { signInPasswordSchema, type SignInPasswordInput } from "@/lib/schemas/auth";
-import { Suspense } from "react";
+import { login, AuthApiError } from "@/lib/auth/api";
+
+export default function PasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <PasswordForm />
+    </Suspense>
+  );
+}
 
 function PasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "";
-  const { signIn } = useAuth();
+
+  const email = searchParams.get("email") ?? "";
+  const [password, setPassword] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting, isValid },
-  } = useForm<SignInPasswordInput>({
-    resolver: zodResolver(signInPasswordSchema),
-    mode: "onTouched",
-  });
-
-  async function onSubmit(values: SignInPasswordInput) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setSubmitError(null);
+
     try {
-      await signIn(email, values.password);
-      router.push("/dashboard");
+      setIsLoading(true);
+
+      const res = await login(email, password);
+
+      localStorage.setItem("token", res.accessToken);
+      localStorage.setItem("user", JSON.stringify(res.user));
+      document.cookie = `auth-token=${res.accessToken}; path=/; max-age=${res.expiresIn}; SameSite=Lax`;
+
+      router.push("/profile");
     } catch (err) {
-      if (err instanceof AuthApiError) {
-        if (err.code === "invalid_credentials")
-          setSubmitError("Wrong password. Try again.");
-        else if (err.code === "network_error")
-          setSubmitError("Could not reach the server. Is auth-api running?");
-        else setSubmitError("Sign-in failed. Try again.");
+      if (err instanceof AuthApiError && err.code === "invalid_credentials") {
+        setSubmitError("Wrong email or password.");
       } else {
-        setSubmitError("Unexpected error. Try again.");
+        setSubmitError("Could not log in. Try again.");
       }
+    } finally {
+      setIsLoading(false);
     }
   }
 
   return (
     <div className="space-y-12">
       <header className="space-y-2 pb-7">
-        <h1 className="text-5xl my-0">Enter Password</h1>
-        <p className="text-sm text-muted-foreground">
-          Please enter your password to log in to your account.
-        </p>
+        <h1 className="text-5xl my-0">Welcome back</h1>
+        <p className="text-sm text-muted-foreground">{email}</p>
       </header>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email address</Label>
-          <div className="relative">
-            <User
-              aria-hidden
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            />
-            <Input
-              id="email"
-              type="email"
-              defaultValue={email}
-              readOnly
-              className="pl-9"
-            />
-          </div>
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2 pb-4">
+          <label className="text-sm font-medium">Password</label>
 
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <div className="relative">
-            <Lock
-              aria-hidden
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            />
-            <Input
-              id="password"
-              type="password"
-              placeholder="Type your password"
-              className="pl-9"
-              aria-invalid={!!errors.password}
-              {...register("password")}
-            />
-          </div>
-          {errors.password && (
-            <p className="text-xs text-destructive">{errors.password.message}</p>
-          )}
-          <div className="flex items-center justify-between py-3">
-            <div className="flex items-center gap-2">
-              <Checkbox id="remember" />
-              <Label
-                htmlFor="remember"
-                className="text-xs text-muted-foreground"
-              >
-                Keep me logged in
-              </Label>
-            </div>
-            <Link
-              href="#"
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              Forgot your password?
-            </Link>
-          </div>
+          <input
+            type="password"
+            placeholder="Type your password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-orange-400"
+            required
+          />
         </div>
 
         {submitError && (
-          <p className="text-sm text-destructive" role="alert">
+          <p className="text-sm text-red-500" role="alert">
             {submitError}
           </p>
         )}
 
-        <Button
+        <button
           type="submit"
-          className="w-full"
-          disabled={isSubmitting || !isValid}
+          disabled={isLoading || !email || !password}
+          className="w-full rounded-lg bg-orange-500 px-5 py-3 text-sm font-medium text-white disabled:opacity-60"
         >
-          {isSubmitting ? "Signing in…" : "Sign In"}
-        </Button>
+          {isLoading ? "Logging in..." : "Log in"}
+        </button>
       </form>
     </div>
-  );
-}
-
-export default function PasswordPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <PasswordForm />
-    </Suspense>
   );
 }
