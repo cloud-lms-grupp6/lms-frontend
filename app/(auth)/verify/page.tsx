@@ -19,9 +19,14 @@ type Phase = "requesting" | "typing" | "verifying" | "success" | "error";
 function VerifyInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Hämtar e-postadressen från URL:en, t.ex. /verify?email=test@test.com
   const email = searchParams.get("email") ?? "";
+
+  // verify kommer från auth-hooken och används för att verifiera koden mot backend.
   const { verify } = useAuth();
 
+  // State för verifieringskoden och vilket steg sidan befinner sig i.
   const [code, setCode] = useState("");
   const [pocCode, setPocCode] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>(email ? "requesting" : "error");
@@ -29,6 +34,8 @@ function VerifyInner() {
     email ? null : "Missing email in URL."
   );
 
+  // AI användes som stöd för att förstå varför requesten kunde köras två gånger i React StrictMode.
+  // useRef används här för att säkerställa att verifieringskoden bara begärs en gång.
   const requestedRef = useRef(false);
 
   useEffect(() => {
@@ -40,11 +47,13 @@ function VerifyInner() {
       return;
     }
 
+    // Hindrar att requestVerification körs flera gånger.
     if (requestedRef.current) return;
     requestedRef.current = true;
 
     async function run() {
       try {
+        // Skickar en request till backend för att skapa/hämta verifieringskod.
         const res = await requestVerification(email);
 
         if (!res.code) {
@@ -53,6 +62,7 @@ function VerifyInner() {
           return;
         }
 
+        // Sparar koden lokalt och går vidare till auto-fill-steget.
         setPocCode(res.code);
         setPhase("typing");
       } catch (err) {
@@ -75,6 +85,8 @@ function VerifyInner() {
     let interval: ReturnType<typeof setInterval>;
     let done: ReturnType<typeof setTimeout>;
 
+    // AI användes för att ta fram idén med en enkel auto-fill-animation.
+    // Funktionen fyller i koden stegvis så att användaren ser vad som händer i PoC-läget.
     const start = setTimeout(() => {
       interval = setInterval(() => {
         i += 1;
@@ -87,6 +99,7 @@ function VerifyInner() {
       }, 450);
     }, 1000);
 
+    // Rensar timers när komponenten uppdateras eller tas bort.
     return () => {
       clearTimeout(start);
       clearInterval(interval);
@@ -101,6 +114,7 @@ function VerifyInner() {
 
     async function run() {
       try {
+        // Skickar e-post och kod till backend för verifiering.
         await verify(email, code);
 
         if (cancelled) return;
@@ -120,6 +134,7 @@ function VerifyInner() {
 
     run();
 
+    // Hindrar state updates om komponenten hinner avmonteras.
     return () => {
       cancelled = true;
     };
@@ -128,6 +143,7 @@ function VerifyInner() {
   useEffect(() => {
     if (phase !== "success") return;
 
+    // När verifieringen lyckas skickas användaren vidare till inloggningssidan.
     const timer = setTimeout(() => router.push("/sign-in"), 1500);
     return () => clearTimeout(timer);
   }, [phase, router]);

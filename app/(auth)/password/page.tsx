@@ -1,141 +1,237 @@
 "use client";
 
-import { Lock, User } from "lucide-react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAuth } from "@/lib/auth/hooks";
-import { AuthApiError } from "@/lib/auth/api";
-import { signInPasswordSchema, type SignInPasswordInput } from "@/lib/schemas/auth";
-import { Suspense } from "react";
+import { Monitor } from "lucide-react";
+import { FormEvent, useState } from "react";
 
-function PasswordForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "";
-  const { signIn } = useAuth();
-  const [submitError, setSubmitError] = useState<string | null>(null);
+const API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL ?? "http://localhost:5097";
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting, isValid },
-  } = useForm<SignInPasswordInput>({
-    resolver: zodResolver(signInPasswordSchema),
-    mode: "onTouched",
-  });
+export default function SettingsPasswordPage() {
+  // State används för att hålla koll på formulärfälten.
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
-  async function onSubmit(values: SignInPasswordInput) {
-    setSubmitError(null);
+  // State för loading och statusmeddelanden till användaren.
+  const [isLoading, setIsLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatusMessage("");
+
+    // AI användes som stöd för att strukturera enkel frontend-validering.
+    // Här kontrolleras att lösenordet uppfyller längdkravet innan API-anropet skickas.
+    if (newPassword.length <= 10) {
+      setStatusMessage("New password must be more than 10 characters long.");
+      return;
+    }
+
+    // Kontrollerar att användaren har skrivit samma nya lösenord två gånger.
+    if (newPassword !== confirmNewPassword) {
+      setStatusMessage("New passwords do not match.");
+      return;
+    }
+
     try {
-      await signIn(email, values.password);
-      router.push("/dashboard");
-    } catch (err) {
-      if (err instanceof AuthApiError) {
-        if (err.code === "invalid_credentials")
-          setSubmitError("Wrong password. Try again.");
-        else if (err.code === "network_error")
-          setSubmitError("Could not reach the server. Is auth-api running?");
-        else setSubmitError("Sign-in failed. Try again.");
-      } else {
-        setSubmitError("Unexpected error. Try again.");
+      setIsLoading(true);
+
+      // Skickar lösenordsändringen till Auth API.
+      // Token hämtas från localStorage och skickas med som Bearer-token.
+      const response = await fetch(`${API_URL}/api/auth/change-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          confirmNewPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        setStatusMessage("Could not change password.");
+        return;
       }
+
+      // Rensar formuläret efter lyckad ändring.
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setStatusMessage("Password changed successfully.");
+    } catch {
+      setStatusMessage("Could not change password.");
+    } finally {
+      setIsLoading(false);
     }
   }
 
   return (
-    <div className="space-y-12">
-      <header className="space-y-2 pb-7">
-        <h1 className="text-5xl my-0">Enter Password</h1>
-        <p className="text-sm text-muted-foreground">
-          Please enter your password to log in to your account.
-        </p>
-      </header>
+    <div className="mx-auto flex max-w-[1180px] flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email address</Label>
-          <div className="relative">
-            <User
-              aria-hidden
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            />
-            <Input
-              id="email"
-              type="email"
-              defaultValue={email}
-              readOnly
-              className="pl-9"
-            />
-          </div>
-        </div>
+        <button className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700">
+          Need Help?
+        </button>
+      </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <div className="relative">
-            <Lock
-              aria-hidden
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            />
-            <Input
-              id="password"
-              type="password"
-              placeholder="Type your password"
-              className="pl-9"
-              aria-invalid={!!errors.password}
-              {...register("password")}
-            />
-          </div>
-          {errors.password && (
-            <p className="text-xs text-destructive">{errors.password.message}</p>
-          )}
-          <div className="flex items-center justify-between py-3">
-            <div className="flex items-center gap-2">
-              <Checkbox id="remember" />
-              <Label
-                htmlFor="remember"
-                className="text-xs text-muted-foreground"
-              >
-                Keep me logged in
-              </Label>
-            </div>
-            <Link
-              href="#"
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              Forgot your password?
-            </Link>
-          </div>
-        </div>
+      {/* Enkel navigation mellan olika settings-sidor. */}
+      <div className="flex gap-6 text-sm">
+        <a href="/settings" className="px-5 py-2 text-slate-400">
+          General
+        </a>
 
-        {submitError && (
-          <p className="text-sm text-destructive" role="alert">
-            {submitError}
-          </p>
-        )}
+        <a href="/settings/team" className="px-5 py-2 text-slate-400">
+          Team
+        </a>
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isSubmitting || !isValid}
+        <a
+          href="/settings/password"
+          className="rounded-lg bg-slate-900 px-5 py-2 text-white"
         >
-          {isSubmitting ? "Signing in…" : "Sign In"}
-        </Button>
-      </form>
-    </div>
-  );
-}
+          Password
+        </a>
 
-export default function PasswordPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <PasswordForm />
-    </Suspense>
+        <a href="/settings/notification" className="px-5 py-2 text-slate-400">
+          Notification
+        </a>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[260px_1fr]">
+        <div>
+          <h2 className="font-bold text-slate-900">Password</h2>
+          <p className="mt-1 text-xs text-slate-400">
+            Please enter your current password to change your password.
+          </p>
+        </div>
+
+        <section className="rounded-3xl bg-white p-6 shadow-sm">
+          <h3 className="font-semibold text-slate-900">Password</h3>
+
+          <p className="mt-1 text-xs text-slate-400">
+            Change password. Verification code will be sent to your email
+            address.
+          </p>
+
+          {/* Formulär för att byta lösenord. */}
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <div>
+              <label className="text-sm font-medium">Current password*</label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(event) => setCurrentPassword(event.target.value)}
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">New password*</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3"
+                required
+              />
+
+              <p className="mt-1 text-xs text-slate-400">
+                Your new password must be more than 10 characters long.
+              </p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">
+                Confirm new password*
+              </label>
+              <input
+                type="password"
+                value={confirmNewPassword}
+                onChange={(event) =>
+                  setConfirmNewPassword(event.target.value)
+                }
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3"
+                required
+              />
+            </div>
+
+            {/* Visar status, exempelvis felmeddelande eller lyckad ändring. */}
+            {statusMessage && (
+              <p className="text-sm text-slate-500">{statusMessage}</p>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrentPassword("");
+                  setNewPassword("");
+                  setConfirmNewPassword("");
+                  setStatusMessage("");
+                }}
+                className="rounded-lg bg-slate-100 px-5 py-2 text-sm text-slate-400"
+              >
+                Back
+              </button>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="rounded-lg bg-orange-500 px-5 py-2 text-sm text-white disabled:opacity-60"
+              >
+                {isLoading ? "Saving..." : "Save & Next"}
+              </button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[260px_1fr]">
+        <div>
+          <h2 className="font-bold text-slate-900">Login Activities</h2>
+
+          <p className="mt-1 text-xs text-slate-400">
+            See your login activities
+          </p>
+        </div>
+
+        <section className="rounded-3xl bg-white p-6 shadow-sm">
+          <h3 className="font-semibold text-slate-900">
+            Where you&apos;re logged in
+          </h3>
+
+          <p className="mt-1 text-xs text-slate-400">
+            We&apos;ll alert you via email if there is any unusual activity on
+            your account.
+          </p>
+
+          {/* Statisk lista för inloggningsaktiviteter enligt Figma-designen. */}
+          <div className="mt-6 space-y-4">
+            {[
+              "Mac - Stockholm, SE, Sweden",
+              "Mac - Uppsala, SE, Sweden",
+              "Mac - Stockholm, SE, Sweden",
+            ].map((device, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-3 border-b border-slate-100 pb-4"
+              >
+                <Monitor className="size-5 text-slate-500" />
+
+                <div>
+                  <p className="text-sm font-medium">{device}</p>
+                  <p className="text-xs text-slate-400">
+                    Chrome · Active Now
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }

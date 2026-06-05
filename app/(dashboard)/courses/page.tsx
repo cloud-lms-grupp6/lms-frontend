@@ -17,16 +17,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 type Tab = "mine" | "catalog";
 
 export default function CoursesPage() {
+  // Hämtar inloggad användare och JWT-token från auth-store.
+  // Token används sedan när frontend anropar backend-API:erna.
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.accessToken);
 
+  // State för vilken flik som visas: mina kurser eller kurskatalogen.
   const [tab, setTab] = React.useState<Tab>("mine");
 
+  // State för användarens enrollments, felhantering och laddning vid unenroll.
   const [enrollments, setEnrollments] = React.useState<Enrollment[] | null>(null);
   const [enrollmentsError, setEnrollmentsError] = React.useState(false);
   const [removingId, setRemovingId] = React.useState<string | null>(null);
   const [reloadKey, setReloadKey] = React.useState(0);
 
+  // State för kurskatalogen, felhantering och laddning vid enroll.
   const [catalog, setCatalog] = React.useState<Course[] | null>(null);
   const [catalogError, setCatalogError] = React.useState(false);
   const [enrollingId, setEnrollingId] = React.useState<string | null>(null);
@@ -35,6 +40,8 @@ export default function CoursesPage() {
     if (!user || !token) return;
     let active = true;
 
+    // AI användes som stöd för att strukturera asynkrona API-anrop med useEffect.
+    // Denna effekt hämtar den inloggade användarens kurser från UserCourses API.
     (async () => {
       try {
         const data = await getMyEnrollments(user.id, token);
@@ -47,6 +54,7 @@ export default function CoursesPage() {
       }
     })();
 
+    // Hindrar state update om komponenten avmonteras innan API-anropet är klart.
     return () => {
       active = false;
     };
@@ -56,6 +64,8 @@ export default function CoursesPage() {
     if (!token) return;
     let active = true;
 
+    // Hämtar alla tillgängliga kurser från Courses API.
+    // Dessa visas i Browse Catalog-fliken.
     (async () => {
       try {
         const data = await listCourses(token);
@@ -73,11 +83,14 @@ export default function CoursesPage() {
     };
   }, [token]);
 
+  // Skapar en Set med kurs-ID:n som användaren redan är registrerad på.
+  // Det gör det enkelt att avgöra om en kurs ska visa "Enroll" eller "Enrolled".
   const enrolledCourseIds = React.useMemo(
     () => new Set(enrollments?.map((e) => e.courseId) ?? []),
     [enrollments]
   );
 
+  // Mappar kurs-ID till kurstitel så att My Courses kan visa titel istället för bara ID.
   const courseTitles = React.useMemo(
     () => new Map(catalog?.map((c) => [c.id, c.title]) ?? []),
     [catalog]
@@ -86,10 +99,14 @@ export default function CoursesPage() {
   async function handleUnenroll(id: string) {
     if (!token) return;
 
+    // Sparar vilket enrollment-ID som håller på att tas bort,
+    // så knappen kan visa loading-state.
     setRemovingId(id);
 
     try {
       await unenroll(id, token);
+
+      // Uppdaterar listan lokalt utan att behöva ladda om hela sidan.
       setEnrollments((prev) => prev?.filter((e) => e.id !== id) ?? null);
     } catch {
       setEnrollmentsError(true);
@@ -101,10 +118,13 @@ export default function CoursesPage() {
   async function handleEnroll(courseId: string) {
     if (!token) return;
 
+    // Sparar vilket kurs-ID som håller på att enrollas.
     setEnrollingId(courseId);
 
     try {
       const created = await enroll(courseId, token);
+
+      // Lägger till den nya registreringen direkt i state.
       setEnrollments((prev) => (prev ? [...prev, created] : [created]));
     } catch {
       setCatalogError(true);
@@ -133,6 +153,7 @@ export default function CoursesPage() {
         </Button>
       </div>
 
+      {/* Renderar olika innehåll beroende på vald flik. */}
       <div className="flex-1 rounded-card bg-card p-6 shadow-sm">
         {tab === "mine" && (
           <MyCourses
@@ -174,6 +195,7 @@ function MyCourses({
   onRetry: () => void;
   onUnenroll: (id: string) => void;
 }) {
+  // Visar skeleton medan enrollments laddas.
   if (enrollments === null && !error) {
     return (
       <div className="flex flex-col gap-3">
@@ -184,6 +206,7 @@ function MyCourses({
     );
   }
 
+  // Visar felmeddelande om API-anropet misslyckas.
   if (error) {
     return (
       <div className="flex flex-col items-center gap-3 py-10 text-center">
@@ -198,6 +221,7 @@ function MyCourses({
     );
   }
 
+  // Visas om användaren inte är registrerad på några kurser.
   if (enrollments?.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
@@ -216,6 +240,7 @@ function MyCourses({
     );
   }
 
+  // Renderar listan över användarens kurser.
   return (
     <ul className="flex flex-col gap-3">
       {enrollments?.map((e) => (
@@ -268,6 +293,7 @@ function Catalog({
   enrolledCourseIds: Set<string>;
   onEnroll: (courseId: string) => void;
 }) {
+  // Skeleton medan kurskatalogen laddas.
   if (catalog === null && !error) {
     return (
       <div className="flex flex-col gap-3">
@@ -278,6 +304,7 @@ function Catalog({
     );
   }
 
+  // Felmeddelande om kurskatalogen inte kan hämtas.
   if (error) {
     return (
       <div className="flex flex-col items-center gap-3 py-10 text-center">
@@ -288,6 +315,7 @@ function Catalog({
     );
   }
 
+  // Renderar alla kurser från katalogen.
   return (
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {catalog?.map((c, i) => {
