@@ -3,34 +3,154 @@
 import { Camera, User } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+
+// URL till Profile API.
+// Hämtas från .env.local via NEXT_PUBLIC_PROFILE_API_URL.
+// Om ingen miljövariabel finns används localhost för lokal utveckling.
+const PROFILE_API_URL =
+  process.env.NEXT_PUBLIC_PROFILE_API_URL ?? "http://localhost:5244";
+
+// Typen beskriver svaret som kommer tillbaka från Profile API.
+type ProfileResponse = {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  profileImageUrl?: string | null;
+};
 
 export default function SettingsPage() {
   const router = useRouter();
+
+  // Ref används för att kunna öppna file input när användaren klickar på kamera-knappen.
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-const [profileImage, setProfileImage] = useState("/avatars/main.jpg");
+  // State för profilbild och formulärfält.
+  const [profileImage, setProfileImage] = useState("/avatars/main.jpg");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [description, setDescription] = useState("");
 
-const handleImageUpload = (
-  e: React.ChangeEvent<HTMLInputElement>
-) => {
-  const file = e.target.files?.[0];
+  // State för feedback till användaren.
+  const [statusMessage, setStatusMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  if (!file) return;
+  // Hämtar användarens profil när sidan laddas.
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        // JWT-token används för att Profile API ska veta vilken användare som är inloggad.
+        const token = localStorage.getItem("token") ?? "";
 
-  const allowedTypes = [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-  ];
+        const response = await fetch(`${PROFILE_API_URL}/api/profiles/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-  if (!allowedTypes.includes(file.type)) {
-    alert("Only JPG, PNG and WEBP files are allowed.");
-    return;
+        if (!response.ok) {
+          setStatusMessage("Could not load profile.");
+          return;
+        }
+
+        const profile: ProfileResponse = await response.json();
+
+        // Fyller formuläret med data från Profile API.
+        setFirstName(profile.firstName ?? "");
+        setLastName(profile.lastName ?? "");
+        setEmail(profile.email ?? "");
+
+        // Om användaren har en profilbild sparad används den istället för standardbilden.
+        if (profile.profileImageUrl) {
+          setProfileImage(profile.profileImageUrl);
+        }
+      } catch {
+        setStatusMessage("Could not load profile.");
+      }
+    }
+
+    loadProfile();
+  }, []);
+
+  // Hanterar uppladdning av profilbild.
+  const handleImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    // Validerar att endast tillåtna bildformat kan laddas upp.
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!allowedTypes.includes(file.type)) {
+      alert("Only JPG, PNG and WEBP files are allowed.");
+      return;
+    }
+
+    // Skapar en lokal preview av bilden direkt i webbläsaren.
+    const imageUrl = URL.createObjectURL(file);
+    setProfileImage(imageUrl);
+
+    try {
+      const token = localStorage.getItem("token") ?? "";
+
+      // Skickar den nya profilbildens URL till Profile API.
+      await fetch(`${PROFILE_API_URL}/api/profiles/me/profile-image`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          profileImageUrl: imageUrl,
+        }),
+      });
+    } catch {
+      setStatusMessage("Could not update profile image.");
+    }
+  };
+
+  // Sparar användarens profiländringar via Profile API.
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatusMessage("");
+
+    try {
+      setIsLoading(true);
+
+      const token = localStorage.getItem("token") ?? "";
+
+      const response = await fetch(`${PROFILE_API_URL}/api/profiles/me`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email,
+          description,
+        }),
+      });
+
+      if (!response.ok) {
+        setStatusMessage("Could not save profile.");
+        return;
+      }
+
+      setStatusMessage("Profile saved successfully.");
+    } catch {
+      setStatusMessage("Could not save profile.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
-  setProfileImage(URL.createObjectURL(file));
-};
   return (
     <div className="mx-auto flex max-w-[1180px] flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -82,32 +202,32 @@ const handleImageUpload = (
           <div className="-mt-12 flex flex-col items-center px-6 pb-6">
             <div className="relative">
               <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-           className="hidden"
-          onChange={handleImageUpload}
-          />
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
 
-         <Image
-         src={profileImage}
-        alt="Profile avatar"
-         width={88}
-          height={88}
-           className="rounded-full border-4 border-white object-cover"
-           />
+              <Image
+                src={profileImage}
+                alt="Profile avatar"
+                width={88}
+                height={88}
+                className="rounded-full border-4 border-white object-cover"
+              />
 
-      <button
-           type="button"
-           onClick={() => fileInputRef.current?.click()}
-          className="absolute bottom-1 right-1 z-10 flex size-7 items-center justify-center rounded-full bg-orange-500 text-white"
-           >
-           <Camera className="size-3.5" />
-            </button>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-1 right-1 z-10 flex size-7 items-center justify-center rounded-full bg-orange-500 text-white"
+              >
+                <Camera className="size-3.5" />
+              </button>
             </div>
 
             <h2 className="mt-3 text-lg font-bold text-slate-900">
-              Hasan Mahmud
+              {firstName || "User"} {lastName}
             </h2>
 
             <span className="mt-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-600">
@@ -123,21 +243,22 @@ const handleImageUpload = (
             </div>
 
             <button
-            type="button"
-           onClick={() => fileInputRef.current?.click()}
-            className="rounded-lg border px-4 py-2 text-sm font-medium text-slate-700"
-           >
-           Upload photo
-             </button>
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="rounded-lg border px-4 py-2 text-sm font-medium text-slate-700"
+            >
+              Upload photo
+            </button>
           </div>
 
-          <form className="mt-6 space-y-5">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
             <div>
               <label className="text-sm font-semibold text-slate-700">
                 First name *
               </label>
               <input
-                defaultValue="Hasan"
+                value={firstName}
+                onChange={(event) => setFirstName(event.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none"
               />
             </div>
@@ -147,7 +268,8 @@ const handleImageUpload = (
                 Last name *
               </label>
               <input
-                defaultValue="Mahmud"
+                value={lastName}
+                onChange={(event) => setLastName(event.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none"
               />
             </div>
@@ -157,7 +279,8 @@ const handleImageUpload = (
                 Email
               </label>
               <input
-                defaultValue="hasan@gmail.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none"
               />
             </div>
@@ -178,10 +301,15 @@ const handleImageUpload = (
               </label>
               <textarea
                 rows={5}
-                defaultValue="A passionate UI/UX Designer with hands-on experience designing intuitive, user-centered digital products across mobile and web platforms."
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
                 className="mt-2 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none"
               />
             </div>
+
+            {statusMessage && (
+              <p className="text-sm text-slate-500">{statusMessage}</p>
+            )}
 
             <div className="flex gap-3">
               <button
@@ -192,10 +320,11 @@ const handleImageUpload = (
               </button>
 
               <button
-                type="button"
-                className="rounded-lg bg-orange-500 px-8 py-2 text-sm font-medium text-white"
+                type="submit"
+                disabled={isLoading}
+                className="rounded-lg bg-orange-500 px-8 py-2 text-sm font-medium text-white disabled:opacity-60"
               >
-                Save
+                {isLoading ? "Saving..." : "Save"}
               </button>
             </div>
           </form>
